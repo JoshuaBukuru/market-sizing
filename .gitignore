@@ -1,0 +1,12 @@
+#Private data
+data/
+notebooks/
+out/
+outputs/
+
+#files
+market_sizing.ipynb
+Market sizing.docx
+.ipynb_checkpoints
+
+
