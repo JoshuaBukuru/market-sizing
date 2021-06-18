@@ -49,9 +49,7 @@ def get_wine_price_band(year):
     df = pd.concat([still_df, spark_df, fort_df], axis=1)
 
     return df
-#%%
-df = get_wine_price_band('2020')
-#%%
+
 def get_beer_price_band(year):
     """" Function to read in and preprocess the Data Orbis file and split the data's sub categories
         into price bands for beer
@@ -65,6 +63,36 @@ def get_beer_price_band(year):
     df = pd.read_excel(path, sheet_name='Sheet1')
     df = df[df['COUNTRYNAME'] == 'South Africa']
 
+    beer_df = df[df['PRODUCTCATEGORY'] == 'Beer']
+    rtd_df = df[df['PRODUCTCATEGORY'] == 'Rtds']
+    non_alcoholic_df_1 =  beer_df[beer_df['PRODUCTSUBCATEGORY'] == 'Non-Alcoholic']
+    non_alcoholic_df_2 = rtd_df[rtd_df['PRODUCTSUBCATEGORY'] == 'Non-Alcoholic']
+    non_alcoholic_df = pd.concat([non_alcoholic_df_1,non_alcoholic_df_2])
+    non_alcoholic_df['PRODUCTCATEGORY'] = non_alcoholic_df['PRODUCTCATEGORY'].apply(lambda x: 'NonAlcoholic')
+
+    beer_df = beer_df[beer_df['PRODUCTSUBCATEGORY'] != 'Non-Alcoholic']
+    rtd_df = rtd_df[rtd_df['PRODUCTSUBCATEGORY'] != 'Non-Alcoholic']
+    df = pd.concat([beer_df, rtd_df, non_alcoholic_df])
+    df['Price_per_subcategory'] = df['PRICE'] / df['SALESQUANTITY']
+    df['Price_band'] = df['Price_per_subcategory'].apply(price_band_conversion)
+
+    df = df.groupby(['PRODUCTCATEGORY', 'Price_band']).agg('sum')[['SALESVOLUME']]
+
+    beer_df = ((df.T.Beer).T).rename(columns={'SALESVOLUME':'Beer'})
+    rtd_df = ((df.T.Rtds).T).rename(columns={'SALESVOLUME': 'Cider and Fabs'})
+    non_alcoholic_df = ((df.T.NonAlcoholic).T).rename(columns={'SALESVOLUME': 'Non-Alcoholic'})
+
+    beer_df = beer_df.apply(lambda x: x / (beer_df['Beer'].sum()))
+    rtd_df = rtd_df.apply(lambda x: x / (rtd_df['Cider and Fabs'].sum()))
+    non_alcoholic_df = non_alcoholic_df.apply(lambda x: x / (non_alcoholic_df['Non-Alcoholic'].sum()))
+
+    df = pd.concat([beer_df, rtd_df, non_alcoholic_df], axis=1)
+
+    return df
+
+#%%
+df = get_beer_price_band('2020')
+#%%
 def get_spirits_price_band(year):
     """" Function to read in and preprocess the Data Orbis file and split the data's sub categories
     into price bands for spirits
@@ -129,7 +157,7 @@ def get_spirits_price_band(year):
 
     frames = [brandy_df, cane_df, cognac_df, gin_df, liqueurs_df, rum_df, vodka_df, whisky_df]
     df = pd.concat(frames, axis=1)
-    return df
+    return data
 
 def price_band_conversion(x):
     """" Function to convert the subcategories in the data orbis dataset to
@@ -158,7 +186,7 @@ df = get_spirits_price_band('2020')
 #%%
 counts = df['PRODUCTSUBCATEGORY'].value_counts()
 #%%
-S=df.groupby(['PRODUCTSEGMENT','PRODUCTSUBCATEGORY']).agg('sum')[['SALESVOLUME']]
+S=df.groupby(['PRODUCTCATEGORY','PRODUCTSUBCATEGORY']).agg('sum')[['SALESVOLUME']]
 #%%
 df_prem = df[df['PRODUCTSEGMENT'] == 'Mainstream']['PRODUCTSUBCATEGORY'].value_counts()
 #%%
