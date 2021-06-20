@@ -47,7 +47,7 @@ def get_wine_price_band(year):
     fort_df = fort_df.apply(lambda x: x / (fort_df['Fortified Wine'].sum()))
 
     df = pd.concat([still_df, spark_df, fort_df], axis=1)
-
+    df = df.fillna(0)
     return df
 
 def get_beer_price_band(year):
@@ -87,12 +87,9 @@ def get_beer_price_band(year):
     non_alcoholic_df = non_alcoholic_df.apply(lambda x: x / (non_alcoholic_df['Non-Alcoholic'].sum()))
 
     df = pd.concat([beer_df, rtd_df, non_alcoholic_df], axis=1)
-
+    df = df.fillna(0)
     return df
 
-#%%
-df = get_beer_price_band('2020')
-#%%
 def get_spirits_price_band(year):
     """" Function to read in and preprocess the Data Orbis file and split the data's sub categories
     into price bands for spirits
@@ -157,7 +154,8 @@ def get_spirits_price_band(year):
 
     frames = [brandy_df, cane_df, cognac_df, gin_df, liqueurs_df, rum_df, vodka_df, whisky_df]
     df = pd.concat(frames, axis=1)
-    return data
+    df = df.fillna(0)
+    return df
 
 def price_band_conversion(x):
     """" Function to convert the subcategories in the data orbis dataset to
@@ -179,15 +177,92 @@ def price_band_conversion(x):
     elif x > 400:
         return 'Ultra Premium'
 
+def get_IWSR_data_estimates(year):
+    """"
+       Function to read in and preprocess the IWSR file
 
+       param year:
+       : return: preprocessed df with IWSR data with stats group as index
+       """
+
+    base_dir = DATA_DIRECTORY / 'IWSR' / year / ''
+    path = get_file_in_directory(base_dir)
+
+    df = pd.read_excel(path, sheet_name='REVISED', skiprows=2)
+    df_name = df['R Million / Million Litres']
+    df = df.iloc[:16, 9:12]
+    sales_volume_df = df['Sales Volumes.2'] * 1000000
+    df['Sales Volume'] = sales_volume_df
+    df['Index'] = df_name
+    df = df.set_index(['Index'])
+
+    return df
+
+def category_to_priceband(priceband_df, category_df):
+    """..."""
+    brandy_df = priceband_df['Brandy'] * category_df.loc['Brandy']['Sales Volume']
+    gin_df = priceband_df['Gin'] * category_df.loc['Gin and Genever']['Sales Volume']
+    cane_df = priceband_df['Cane'] * category_df.loc['Cane']['Sales Volume']
+    vodka_df = priceband_df['Vodka'] * category_df.loc['Vodka']['Sales Volume']
+    liqueurs_df = priceband_df['Liqueurs'] * category_df.loc['Liqueurs']['Sales Volume']
+    whisky_df = priceband_df['Whisky'] * category_df.loc['Whisky']['Sales Volume']
+    rum_df = priceband_df['Rum'] * category_df.loc['Rum']['Sales Volume']
+    #tequila_df = priceband_df['Brandy'] * category_df.loc['Brandy']['Sales Volume']
+    spark_df = priceband_df['Sparkling Wine'] * category_df.loc['Sparkling Wine']['Sales Volume']
+    still_df = priceband_df['Still Wine'] * category_df.loc['Still Wine']['Sales Volume']
+    fort_df = priceband_df['Fortified Wine'] * category_df.loc['Fortified Wine & Wine Aperitifs']['Sales Volume']
+    cider_fabs_df = priceband_df['Cider and Fabs'] * category_df.loc['Cider & FABs']['Sales Volume']
+    beer_df = priceband_df['Beer'] * category_df.loc['Beer']['Sales Volume']
+
+    brandy_df = pd.DataFrame(brandy_df)
+    brandy_df = brandy_df.rename(columns={0: 'Brandy'})
+    gin_df = pd.DataFrame(gin_df)
+    gin_df = gin_df.rename(columns={0: 'Gin and Genever'})
+    cane_df = pd.DataFrame(cane_df)
+    cane_df = cane_df.rename(columns={0: 'Cane'})
+    vodka_df = pd.DataFrame(vodka_df)
+    vodka_df = vodka_df.rename(columns={0: 'Vodka'})
+    liqueurs_df = pd.DataFrame(liqueurs_df)
+    liqueurs_df = liqueurs_df.rename(columns={0: 'Liqueurs'})
+    whisky_df = pd.DataFrame(whisky_df)
+    whisky_df = whisky_df.rename(columns={0: 'Whisky'})
+    rum_df = pd.DataFrame(rum_df)
+    rum_df = rum_df.rename(columns={0: 'Rum'})
+    spark_df = pd.DataFrame(spark_df)
+    spark_df = spark_df.rename(columns={0: 'Sparkling Wine'})
+    still_df = pd.DataFrame(still_df)
+    still_df = still_df.rename(columns={0: 'Still wine'})
+    fort_df = pd.DataFrame(fort_df)
+    fort_df = fort_df.rename(columns={0: 'Fortified Wine & Wine Aperitifs'})
+    cider_fabs_df = pd.DataFrame(cider_fabs_df)
+    cider_fabs_df = cider_fabs_df.rename(columns={0: 'Cider & FABs'})
+    beer_df = pd.DataFrame(beer_df)
+    beer_df = beer_df.rename(columns={0: 'Beer'})
+
+    frames = [brandy_df, gin_df, cane_df, vodka_df, liqueurs_df, whisky_df, rum_df,
+              spark_df, still_df, fort_df, cider_fabs_df, beer_df]
+    df = pd.concat(frames, axis=1)
+    return df
 
 #%%
-df = get_spirits_price_band('2020')
+dff = get_IWSR_data_estimates('2020')
+
 #%%
-counts = df['PRODUCTSUBCATEGORY'].value_counts()
+df1 = get_spirits_price_band('2020')
+df2 = get_beer_price_band('2020')
+df3 = get_wine_price_band('2020')
+
+df = pd.concat([df1, df2, df3], axis=1)
+
 #%%
-S=df.groupby(['PRODUCTCATEGORY','PRODUCTSUBCATEGORY']).agg('sum')[['SALESVOLUME']]
+df_final = category_to_priceband(df, dff)
 #%%
-df_prem = df[df['PRODUCTSEGMENT'] == 'Mainstream']['PRODUCTSUBCATEGORY'].value_counts()
+df_trans = df_final.T
+
+#counts = df['PRODUCTSUBCATEGORY'].value_counts()
 #%%
-df_prem['PRODUCTCATEGORY'].value_counts()
+#S=df.groupby(['PRODUCTCATEGORY','PRODUCTSUBCATEGORY']).agg('sum')[['SALESVOLUME']]
+#%%
+#df_prem = df[df['PRODUCTSEGMENT'] == 'Mainstream']['PRODUCTSUBCATEGORY'].value_counts()
+#%%
+#df_prem['PRODUCTCATEGORY'].value_counts()
