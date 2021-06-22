@@ -4,6 +4,7 @@ import numpy as np
 
 from utils import *
 from mappings import *
+from price_bands import get_IWSR_data_estimates
 
 def get_base_df(current_year):
     """ Method to get starting point for estimating market size from income statement data for CY
@@ -112,23 +113,19 @@ def get_data_orbis_estimate(base_df, data_orbis_mappings, iwsr_mappings, current
     ratio_LY = data_orbis_LY/IWSR_LY
     return data_orbis_CY/ratio_LY
 
-
-print('Hello')
-
-if __name__ == '__main__':
-
+def result(current_year, last_year):
+    """..."""
     current_year = '2020'
     last_year = '2019'
 
     # get starting point, which is income statement
     base_df = get_base_df(current_year)
-    #Create a new column with last year's income volumes
+    # Create a new column with last year's income volumes
     base_df['Income LY'] = transform_BIP_data(get_income_statement_data(last_year))
     base_df = base_df.reset_index()
 
-
     # get IWSR for previous year (most accurate estimate)
-    base_df['IWSR LY'] = base_df['index'].apply(map_to_base_data, args = [get_IWSR_data(last_year), iwsr_mappings])
+    base_df['IWSR LY'] = base_df['index'].apply(map_to_base_data, args=[get_IWSR_data(last_year), iwsr_mappings])
 
     # Estimate IWSR 2020 data using 2019 income-iwsr ratio per stats group and 2020 Income data
     base_df['IWSR Estimate'] = get_IWSR_estimate(base_df, iwsr_mappings, last_year)
@@ -137,7 +134,7 @@ if __name__ == '__main__':
     base_df['SALBA Estimate'] = get_SALBA_estimate(base_df, salba_mappings, current_year)
     base_df = base_df.set_index('index')
 
-    base_df.loc['Liqueurs', 'SALBA Estimate'] +=  get_amarula_data(current_year)
+    base_df.loc['Liqueurs', 'SALBA Estimate'] += get_amarula_data(current_year)
 
     base_df = base_df.reset_index()
 
@@ -148,17 +145,106 @@ if __name__ == '__main__':
     base_df['GLOBAL Estimate'] = get_GLOBAL_estimate(base_df, global_mappings, current_year)
 
     # Get data orbis estimate for brandy, gin, whisky, vodka, liqueurs, beer, all wines, Ciders & RTDS
-    base_df['Data Orbis Estimate'] = get_data_orbis_estimate(base_df, data_orbis_mappings, iwsr_mappings, current_year, last_year)
+    base_df['Data Orbis Estimate'] = get_data_orbis_estimate(base_df, data_orbis_mappings, iwsr_mappings,
+                                                             current_year, last_year)
 
     # Get the adjusted average estimate (discard furthest data point and recalcuate mean)
-    base_df['Avg Estimate'] = base_df.apply(get_adjusted_mean_estimate, axis = 1)
+    base_df['Avg Estimate'] = base_df.apply(get_adjusted_mean_estimate, axis=1)
 
     base_df = base_df.set_index('index')
 
-    output_path = f'out\market_size_{current_year}.csv'
-    base_df.loc[['Brandy', 'Gin', 'Vodka', 'Liqueurs', 'Whisky', 'Beer', 'Sparkling Wine', 'Wine Aperitif', 
-           'Fortified Wine 1', 'Still Wine', 'Fortified Wine 2', 'CIDER & RTDs', 'Ciders',
-           'FABs']].to_csv(output_path)
+    # output_path = f'out\market_size_test{current_year}.csv'
+    # base_df.loc[['Brandy', 'Gin', 'Vodka', 'Liqueurs', 'Whisky', 'Beer', 'Sparkling Wine', 'Wine Aperitif',
+    #              'Fortified Wine 1', 'Still Wine', 'Fortified Wine 2', 'CIDER & RTDs', 'Ciders',
+    #              'FABs']].to_csv(output_path)
+    df = base_df.loc[['Brandy', 'Gin', 'Vodka', 'Liqueurs', 'Whisky', 'Beer', 'Sparkling Wine', 'Wine Aperitif',
+                  'Fortified Wine 1', 'Still Wine', 'Fortified Wine 2', 'CIDER & RTDs', 'Ciders',
+                  'FABs']]
+    return df
+def test_IWSR_estimates(current_year='2020', last_year='2019'):
+    """..."""
+    IWSR_df = get_IWSR_data_estimates(current_year)
+    result_df = result(current_year, last_year)
+    # fortified_aperitif_s = result_df.loc['Fortified Wine 1'] + result_df.loc['Fortified Wine 2']\
+    #                        + result_df.loc['Wine Aperitif']
+    # fortified_aperitif_s = (pd.DataFrame(data=fortified_aperitif_s, columns=['Fortified Wine & Wine Aperitifs'])).T
+    # result_df = pd.concat([result_df, fortified_aperitif_s])
+
+    brandy_df = abs((result_df.loc['Brandy']['Avg Estimate'] / IWSR_df.loc['Brandy']['Sales Volume']) - 1)
+    gin_df = abs((result_df.loc['Gin']['Avg Estimate'] / IWSR_df.loc['Gin and Genever']['Sales Volume']) - 1)
+    #cane_df = abs((result_df.loc['Brandy']['Avg Estimate'] / IWSR_df.loc['Brandy']['Sales Volume']) - 1)
+    vodka_df = abs((result_df.loc['Vodka']['Avg Estimate'] / IWSR_df.loc['Vodka']['Sales Volume']) - 1)
+    liqueurs_df = abs((result_df.loc['Liqueurs']['Avg Estimate'] / IWSR_df.loc['Liqueurs']['Sales Volume']) - 1)
+    whisky_df = abs((result_df.loc['Whisky']['Avg Estimate'] / IWSR_df.loc['Whisky']['Sales Volume']) - 1)
+    #rum_df = abs((result_df.loc['Rum']['Avg Estimate'] / IWSR_df.loc['Rum']['Sales Volume']) - 1)
+    #tequila_df = abs((result_df.loc['Brandy']['Avg Estimate'] / IWSR_df.loc['Brandy']['Sales Volume']) - 1)
+    spark_df = abs((result_df.loc['Sparkling Wine']['Avg Estimate'] / IWSR_df.loc['Sparkling Wine']['Sales Volume']) - 1)
+    still_df = abs((result_df.loc['Still Wine']['Avg Estimate'] / IWSR_df.loc['Still Wine']['Sales Volume']) - 1)
+    fort_df = abs((result_df.loc['Fortified Wine 2']['Avg Estimate'] / IWSR_df.loc['Fortified Wine & Wine Aperitifs']['Sales Volume']) - 1)
+    cider_fabs_df = abs((result_df.loc['CIDER & RTDs']['Avg Estimate'] / IWSR_df.loc['Cider & FABs']['Sales Volume']) - 1)
+    beer_df = abs((result_df.loc['Beer']['Avg Estimate'] / IWSR_df.loc['Beer']['Sales Volume']) - 1)
+
+    df = pd.DataFrame(data=[brandy_df, gin_df, vodka_df, liqueurs_df, whisky_df,
+                            spark_df, still_df, fort_df, cider_fabs_df, beer_df], columns=['Error of Estimates'],
+                      index=['Brandy', 'Gin', 'Vodka', 'Liqueurs', 'Whisky', 'Sparkling Wine', 'Still Wine',
+                             'Fortified Wine & Wine Aperitifs', 'Cider & FABs', 'Beer'])
+
+    return df
+
+#%%
+df = test_IWSR_estimates()
+# current_year = '2020'
+# last_year = '2019'
+# result(current_year, last_year)
+
+#%%
+
+print('Hello')
+
+# if __name__ == '__main__':
+#
+#     current_year = '2020'
+#     last_year = '2019'
+#
+#     # get starting point, which is income statement
+#     base_df = get_base_df(current_year)
+#     #Create a new column with last year's income volumes
+#     base_df['Income LY'] = transform_BIP_data(get_income_statement_data(last_year))
+#     base_df = base_df.reset_index()
+#
+#
+#     # get IWSR for previous year (most accurate estimate)
+#     base_df['IWSR LY'] = base_df['index'].apply(map_to_base_data, args = [get_IWSR_data(last_year), iwsr_mappings])
+#
+#     # Estimate IWSR 2020 data using 2019 income-iwsr ratio per stats group and 2020 Income data
+#     base_df['IWSR Estimate'] = get_IWSR_estimate(base_df, iwsr_mappings, last_year)
+#
+#     # Get estimates for brandy, gin, whisky, vodka and liqueurs from SALBA
+#     base_df['SALBA Estimate'] = get_SALBA_estimate(base_df, salba_mappings, current_year)
+#     base_df = base_df.set_index('index')
+#
+#     base_df.loc['Liqueurs', 'SALBA Estimate'] +=  get_amarula_data(current_year)
+#
+#     base_df = base_df.reset_index()
+#
+#     # Get estimates for still, fortified, and sparkling wine from SAWIS
+#     base_df['SAWIS Estimate'] = get_SAWIS_estimate(base_df, sawis_mappings, current_year)
+#
+#     # Get estimate for beer from GLOBAL data
+#     base_df['GLOBAL Estimate'] = get_GLOBAL_estimate(base_df, global_mappings, current_year)
+#
+#     # Get data orbis estimate for brandy, gin, whisky, vodka, liqueurs, beer, all wines, Ciders & RTDS
+#     base_df['Data Orbis Estimate'] = get_data_orbis_estimate(base_df, data_orbis_mappings, iwsr_mappings, current_year, last_year)
+#
+#     # Get the adjusted average estimate (discard furthest data point and recalcuate mean)
+#     base_df['Avg Estimate'] = base_df.apply(get_adjusted_mean_estimate, axis = 1)
+#
+#     base_df = base_df.set_index('index')
+#
+#     output_path = f'out\market_size_{current_year}.csv'
+#     base_df.loc[['Brandy', 'Gin', 'Vodka', 'Liqueurs', 'Whisky', 'Beer', 'Sparkling Wine', 'Wine Aperitif',
+#            'Fortified Wine 1', 'Still Wine', 'Fortified Wine 2', 'CIDER & RTDs', 'Ciders',
+#            'FABs']].to_csv(output_path)
 
 
 

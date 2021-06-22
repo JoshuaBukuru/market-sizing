@@ -245,19 +245,19 @@ def category_to_priceband(priceband_df, category_df):
     return df
 
 #%%
-dff = get_IWSR_data_estimates('2020')
+#dff = get_IWSR_data_estimates('2020')
 
 #%%
-df1 = get_spirits_price_band('2020')
-df2 = get_beer_price_band('2020')
-df3 = get_wine_price_band('2020')
+# df1 = get_spirits_price_band('2020')
+# df2 = get_beer_price_band('2020')
+# df3 = get_wine_price_band('2020')
 
-df = pd.concat([df1, df2, df3], axis=1)
+# df = pd.concat([df1, df2, df3], axis=1)
 
 #%%
-df_final = category_to_priceband(df, dff)
+# df_final = category_to_priceband(df, dff)
 #%%
-df_trans = df_final.T
+# df_trans = df_final.T
 
 #counts = df['PRODUCTSUBCATEGORY'].value_counts()
 #%%

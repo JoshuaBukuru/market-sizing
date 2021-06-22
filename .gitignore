@@ -3,7 +3,7 @@ data/
 notebooks/
 out/
 outputs/
-
+docs/
 #files
 market_sizing.ipynb
 Market sizing.docx
