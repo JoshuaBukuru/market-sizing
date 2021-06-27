@@ -2,11 +2,13 @@ import pandas as pd
 import numpy as np
 from utils import *
 from mappings import *
+import re
 def get_product_category(year, product_category):
     """" Function to get the data and filter by product category
 
         : param year: year of data analysis
         : param product_category: product category
+        : param x: x is the pack size
         : return: data frame filtered by product category
         """
     base_dir = DATA_DIRECTORY / 'data_orbis_low_level'
@@ -29,8 +31,6 @@ def get_product_category(year, product_category):
     'Energy' if x == 'Energy' else
     'Alcohol')
 
-    # Create a price per subcategory column to get a unit price for every subcategory
-    df['Price_per_subcategory'] = df['PRICE'] / df['SALESQUANTITY']
 
     return df
 
@@ -41,7 +41,10 @@ def get_wine_price_band(year):
     : param year: year of data analysis
     : return: data frame of price band splits per sub category
     """
-    df = get_product_category(year, 'Wine', )
+    df = get_product_category(year, 'Wine')
+
+    # Create a price per subcategory column to get a unit price for every subcategory
+    df['Price_per_subcategory'] = (df['PRICE'] / df['SALESQUANTITY'])
 
     #Seperate the data by Still wine, aperitif, fortified wine, sparkling wine
     aperitif_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Aperitif']
@@ -119,45 +122,92 @@ def get_cider_price_band(year):
         """
 
 
-def get_beer_price_band(year):
-    """" Function to read in and preprocess the Data Orbis file and split the data's sub categories
-        into price bands for beer
+def get_Rtds_price_band(year):
+    """Function to read in and preprocess the Data Orbis file and split the data's sub categories
+        into price bands for RTDs
 
-        param year: year of data analysis
+        : param year: year of data analysis
         : return: data frame of price band splits per sub category
         """
-    base_dir = DATA_DIRECTORY / 'data_orbis' / year / ''
-    path = get_file_in_directory(base_dir)
+    df = get_product_category(year, 'Rtds')
+    df = convert_product_description_beer_and_rtds(df)
 
-    df = pd.read_excel(path, sheet_name='Sheet1')
-    df = df[df['COUNTRYNAME'] == 'South Africa']
-
-    beer_df = df[df['PRODUCTCATEGORY'] == 'Beer']
-    rtd_df = df[df['PRODUCTCATEGORY'] == 'Rtds']
-    non_alcoholic_df_1 =  beer_df[beer_df['PRODUCTSUBCATEGORY'] == 'Non-Alcoholic']
-    non_alcoholic_df_2 = rtd_df[rtd_df['PRODUCTSUBCATEGORY'] == 'Non-Alcoholic']
-    non_alcoholic_df = pd.concat([non_alcoholic_df_1, non_alcoholic_df_2])
-    non_alcoholic_df['PRODUCTCATEGORY'] = non_alcoholic_df['PRODUCTCATEGORY'].apply(lambda x: 'NonAlcoholic')
-
-    beer_df = beer_df[beer_df['PRODUCTSUBCATEGORY'] != 'Non-Alcoholic']
-    rtd_df = rtd_df[rtd_df['PRODUCTSUBCATEGORY'] != 'Non-Alcoholic']
-    df = pd.concat([beer_df, rtd_df, non_alcoholic_df])
-    df['Price_per_subcategory'] = df['PRICE'] / df['SALESQUANTITY']
-    df['Price_band'] = df['Price_per_subcategory'].apply(price_band_conversion)
-
-    df = df.groupby(['PRODUCTCATEGORY', 'Price_band']).agg('sum')[['SALESVOLUME']]
-
-    beer_df = ((df.T.Beer).T).rename(columns={'SALESVOLUME':'Beer'})
-    rtd_df = ((df.T.Rtds).T).rename(columns={'SALESVOLUME': 'Cider and Fabs'})
-    non_alcoholic_df = ((df.T.NonAlcoholic).T).rename(columns={'SALESVOLUME': 'Non-Alcoholic'})
-
-    beer_df = beer_df.apply(lambda x: x / (beer_df['Beer'].sum()))
-    rtd_df = rtd_df.apply(lambda x: x / (rtd_df['Cider and Fabs'].sum()))
-    non_alcoholic_df = non_alcoholic_df.apply(lambda x: x / (non_alcoholic_df['Non-Alcoholic'].sum()))
-
-    df = pd.concat([beer_df, rtd_df, non_alcoholic_df], axis=1)
-    df = df.fillna(0)
+    # # Aggregate by subcategory, alcohol presence and price band
+    # df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
+    #
+    # # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
+    # brandy_df = df.T.Brandy
+    # df_mod = pd.DataFrame(data=np.zeros(6), columns=['Zeros'], index=['Accessible Premium',
+    #                                                                   'Low Price',
+    #                                                                   'Premium',
+    #                                                                   'Super Premium',
+    #                                                                   'Ultra Premium',
+    #                                                                   'Value'])
     return df
+#%%
+df = get_Rtds_price_band('2020')
+
+#%%
+#%%
+dff = convert_product_description_beer_and_rtds(df)
+#%%
+
+#sd = df['PRODUCTDESCRIPTION'].value_counts()
+#%%
+
+#%%
+def convert_product_description_beer_and_rtds(df):
+    """..."""
+    df['PRODUCTDESCRIPTION'] = df['PRODUCTDESCRIPTION'].apply(lambda x: re.split('\s', x)[-1])
+    df['PRODUCTDESCRIPTION'] = df['PRODUCTDESCRIPTION'].apply(lambda x: '330ml'
+        if search_product_description('330', x) or
+        search_product_description('340', x) or
+        search_product_description('300', x) or
+        search_product_description('275', x) or
+        search_product_description('250', x) or
+        search_product_description('200', x) or
+        search_product_description('100', x) or
+        search_product_description('375', x) else
+        '500ml'
+        if search_product_description('500', x) or
+        search_product_description('440', x) else
+        '660ml'
+        if search_product_description('660', x) or
+        search_product_description('750', x) or
+        search_product_description('30l', x) or
+        search_product_description('2l', x) or
+        search_product_description('1l', x) or
+        search_product_description('5l', x) or
+        search_product_description('700', x) else '500ml')
+
+    df_330ml = df[df["PRODUCTDESCRIPTION"] == "330ml"]
+    df_500ml = df[df["PRODUCTDESCRIPTION"] == "500ml"]
+    df_660ml = df[df["PRODUCTDESCRIPTION"] == "660ml"]
+
+    # Create a price per subcategory column to get a unit price for every subcategory
+    df_330ml['Price_per_subcategory'] = (df_330ml['PRICE'] / df_330ml['SALESQUANTITY']) * 6
+    df_500ml['Price_per_subcategory'] = (df_500ml['PRICE'] / df_500ml['SALESQUANTITY']) * 6
+    df_660ml['Price_per_subcategory'] = (df_660ml['PRICE'] / df_660ml['SALESQUANTITY']) * 12
+
+    # Apply price band conversion and price column
+    df_330ml['Price_band'] = df_330ml['Price_per_subcategory'].apply(price_band_beer_conversion, args=['330ml'])
+    df_500ml['Price_band'] = df_500ml['Price_per_subcategory'].apply(price_band_beer_conversion, args=['500ml'])
+    df_660ml['Price_band'] = df_660ml['Price_per_subcategory'].apply(price_band_beer_conversion, args=['660ml'])
+
+    df = pd.concat([df_330ml, df_500ml, df_660ml])
+
+    return df
+
+def search_product_description(search, txt):
+    """..."""
+    x = re.search(search, txt)
+    if x == None:
+        return False
+    else:
+        if x.group() == search:
+            return True
+        else:
+            return False
 
 def get_spirits_price_band(year):
     """Function to read in and preprocess the Data Orbis file and split the data's sub categories
@@ -167,6 +217,9 @@ def get_spirits_price_band(year):
     : return: data frame of price band splits per sub category
     """
     df = get_product_category(year, 'Spirits')
+
+    # Create a price per subcategory column to get a unit price for every subcategory
+    df['Price_per_subcategory'] = (df['PRICE'] / df['SALESQUANTITY'])
 
     # Apply price and column
     df['Price_band'] = df['Price_per_subcategory'].apply(
@@ -202,6 +255,11 @@ def get_spirits_price_band(year):
     whisky_df = df.T.Whisky
     df_mod = alcohol_type_classifier('Whisky', whisky_df, df_mod)
 
+    # calculate proportions of all subcategories
+    for col in df_mod.columns:
+        df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
+
+    df_mod = df_mod.fillna(0)
 
     return df_mod
 
@@ -258,6 +316,56 @@ def price_band_wine_conversion(x, category):
         elif x > 200 and x <= 400:
             return 'Super Premium'
         elif x > 400:
+            return 'Ultra Premium'
+
+def price_band_beer_conversion(x, category):
+    """" Function to convert the subcategories in the data orbis dataset to
+    price bands
+
+    : param x: dataset
+    : param category: type of wine (fortified, still, etc)
+    : return: price band
+    """
+    if category == '330ml':
+        if x > 0 and x <= 60:
+            return 'Low Price'
+        elif x > 60 and x <= 70:
+            return 'Affordable'
+        elif x > 70 and x <= 80:
+            return 'Accessible Premium'
+        elif x > 80 and x <= 90:
+            return 'Premium'
+        elif x > 90 and x <= 110:
+            return 'Super Premium'
+        elif x > 110:
+            return 'Ultra Premium'
+
+    if category == '500ml':
+        if x > 0 and x <= 85:
+            return 'Low Price'
+        elif x > 85 and x <= 100:
+            return 'Affordable'
+        elif x > 100 and x <= 115:
+            return 'Accessible Premium'
+        elif x > 115 and x <= 130:
+            return 'Premium'
+        elif x > 130 and x <= 150:
+            return 'Super Premium'
+        elif x > 150:
+            return 'Ultra Premium'
+
+    if category == '660ml':
+        if x > 0 and x <= 200:
+            return 'Low Price'
+        elif x > 200 and x <= 240:
+            return 'Affordable'
+        elif x > 240 and x <= 250:
+            return 'Accessible Premium'
+        elif x > 250 and x <= 260:
+            return 'Premium'
+        elif x > 260 and x <= 280:
+            return 'Super Premium'
+        elif x > 280:
             return 'Ultra Premium'
 
 
@@ -331,6 +439,8 @@ def category_to_priceband(priceband_df, category_df):
 #%%
 #dff = get_IWSR_data_estimates('2020')
 df = get_spirits_price_band('2020')
+#%%
+dff = df.T
 
 #%%
 # df1 = get_spirits_price_band('2020')
