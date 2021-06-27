@@ -75,6 +75,7 @@ def get_wine_price_band(year):
                                                                     'Premium',
                                                                     'Super Premium',
                                                                     'Ultra Premium',
+                                                                    'Affordable',
                                                                     'Value'])
     df_mod = alcohol_type_classifier('Aperitif', aperitif_df, df_mod)
     df_mod.drop('Zeros', axis='columns', inplace=True)
@@ -113,14 +114,37 @@ def alcohol_type_classifier(name, category, df_mod):
     return df_mod
 
 
-def get_cider_price_band(year):
+def get_beer_price_band(year):
     """" Function to read in and preprocess the Data Orbis file and split the data's sub categories
-        into price bands for ciders
+        into price bands for beers
 
         param year: year of data analysis
         : return: data frame of price band splits per sub category
         """
+    df = get_product_category(year, 'Beer')
+    df = convert_product_description_beer_and_rtds(df)
 
+    # # Aggregate by subcategory, alcohol presence and price band
+    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
+    # #
+    # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
+    beer_df = df.T.Beer
+    df_mod = pd.DataFrame(data=np.zeros(6), columns=['Zeros'], index=['Accessible Premium',
+                                                                      'Low Price',
+                                                                      'Premium',
+                                                                      'Super Premium',
+                                                                      'Ultra Premium',
+                                                                      'Affordable'])
+    df_mod = alcohol_type_classifier('Beer', beer_df, df_mod)
+    df_mod.drop('Zeros', axis='columns', inplace=True)
+
+    # calculate proportions of all subcategories
+    for col in df_mod.columns:
+        df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
+
+    df_mod = df_mod.fillna(0)
+
+    return df_mod
 
 def get_Rtds_price_band(year):
     """Function to read in and preprocess the Data Orbis file and split the data's sub categories
@@ -133,23 +157,35 @@ def get_Rtds_price_band(year):
     df = convert_product_description_beer_and_rtds(df)
 
     # # Aggregate by subcategory, alcohol presence and price band
-    # df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
-    #
-    # # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
-    # brandy_df = df.T.Brandy
-    # df_mod = pd.DataFrame(data=np.zeros(6), columns=['Zeros'], index=['Accessible Premium',
-    #                                                                   'Low Price',
-    #                                                                   'Premium',
-    #                                                                   'Super Premium',
-    #                                                                   'Ultra Premium',
-    #                                                                   'Value'])
-    return df
+    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
+    # #
+    # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
+    cider_df = df.T.Cider
+    df_mod = pd.DataFrame(data=np.zeros(6), columns=['Zeros'], index=['Accessible Premium',
+                                                                      'Low Price',
+                                                                      'Premium',
+                                                                      'Super Premium',
+                                                                      'Ultra Premium',
+                                                                      'Affordable'])
+    df_mod = alcohol_type_classifier('Cider', cider_df, df_mod)
+    df_mod.drop('Zeros', axis='columns', inplace=True)
+    fabs_df = df.T.Fabs
+    df_mod = alcohol_type_classifier('Fabs', fabs_df, df_mod)
+
+    # calculate proportions of all subcategories
+    for col in df_mod.columns:
+        df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
+
+    df_mod = df_mod.fillna(0)
+
+    return df_mod
 #%%
-df = get_Rtds_price_band('2020')
+df = get_beer_price_band('2020')
 
 #%%
+df = get_wine_price_band('2020')
 #%%
-dff = convert_product_description_beer_and_rtds(df)
+
 #%%
 
 #sd = df['PRODUCTDESCRIPTION'].value_counts()
