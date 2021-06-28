@@ -460,83 +460,84 @@ def get_IWSR_data_estimates(year):
     df = df.set_index(['Index'])
 
     return df
-
-def category_to_priceband(priceband_df, category_df):
+#%%
+def category_to_priceband(category_df, priceband_spirits, priceband_beer, priceband_rtds, priceband_wine,
+                          priceband_still_wine):
     """..."""
     # RTDS
-    cider_alcohol_df = category_df.loc['Cider']['Alcohol_volume'] * priceband_df['Cider_Alcohol']
-    cider_low_alcohol_df = category_df.loc['Cider']['Low_Alcohol_volume'] * priceband_df['Cider_Low_Alcohol']
-    cider_no_alcohol_df = category_df.loc['Cider']['No_Alcohol_volume'] * priceband_df['Cider_No_Alcohol']
-    fabs_alcohol_df = category_df.loc['RTDs']['Alcohol_volume'] * priceband_df['Fabs_Alcohol']
-    fabs_low_alcohol_df = category_df.loc['RTDs']['Low_Alcohol_volume'] * priceband_df['Fabs_Low_Alcohol']
-    fabs_no_alcohol_df = category_df.loc['RTDs']['No_Alcohol_volume'] * priceband_df['Fabs_No_Alcohol']
+    cider_alcohol_df = category_df.loc['Cider']['Alcohol_volume'] * priceband_rtds['Cider_Alcohol']
+    cider_low_alcohol_df = category_df.loc['Cider']['Low_Alcohol_volume'] * priceband_rtds['Cider_Low_Alcohol']
+    cider_no_alcohol_df = category_df.loc['Cider']['No_Alcohol_volume'] * priceband_rtds['Cider_No_Alcohol']
+    fabs_alcohol_df = category_df.loc['RTDs']['Alcohol_volume'] * priceband_rtds['Fabs_Alcohol']
+    fabs_low_alcohol_df = category_df.loc['RTDs']['Low_Alcohol_volume'] * priceband_rtds['Fabs_Low_Alcohol']
+    fabs_no_alcohol_df = category_df.loc['RTDs']['No_Alcohol_volume'] * priceband_rtds['Fabs_No_Alcohol']
 
     # Beers
-    beer_alcohol_df = category_df.loc['Beer']['Alcohol_volume'] * priceband_df['Beer_Alcohol']
-    beer_low_alcohol_df = category_df.loc['Beer']['Low_Alcohol_volume'] * priceband_df['Beer_Low_Alcohol']
-    beer_no_alcohol_df = category_df.loc['Beer']['No_Alcohol_volume'] * priceband_df['Beer_No_Alcohol']
+    beer_alcohol_df = category_df.loc['Beer']['Alcohol_volume'] * priceband_beer['Beer_Alcohol']
+    beer_low_alcohol_df = category_df.loc['Beer']['Low_Alcohol_volume'] * priceband_beer['Beer_Low_Alcohol']
+    beer_no_alcohol_df = category_df.loc['Beer']['No_Alcohol_volume'] * priceband_beer['Beer_No_Alcohol']
 
     # Spirits
-    brandy_alcohol_df = category_df.loc['Brandy']['Alcohol_volume'] * priceband_df['Brandy_Alcohol']
-    brandy_low_alcohol_df = category_df.loc['Brandy']['Low_Alcohol_volume'] * priceband_df['Brandy_Low_Alcohol']
-    brandy_no_alcohol_df = category_df.loc['Brandy']['No_Alcohol_volume'] * priceband_df['Brandy_No_Alcohol']
+    brandy_alcohol_df = category_df.loc['Brandy']['Alcohol_volume'] * priceband_spirits['Brandy_Alcohol']
+    brandy_low_alcohol_df = category_df.loc['Brandy']['Low_Alcohol_volume'] * priceband_spirits['Brandy_Low_Alcohol']
+    # brandy_no_alcohol_df = category_df.loc['Brandy']['No_Alcohol_volume'] * priceband_spirits['Brandy_No_Alcohol']
 
-    cane_alcohol_df = category_df.loc['Cane']['Alcohol_volume'] * priceband_df['Cane_Alcohol']
-    cane_low_alcohol_df = category_df.loc['Cane']['Low_Alcohol_volume'] * priceband_df['Cane_Low_Alcohol']
-    cane_no_alcohol_df = category_df.loc['Cane']['No_Alcohol_volume'] * priceband_df['Cane_No_Alcohol']
+    cane_alcohol_df = category_df.loc['Cane']['Alcohol_volume'] * priceband_spirits['Cane_Alcohol']
+    # cane_low_alcohol_df = category_df.loc['Cane']['Low_Alcohol_volume'] * priceband_spirits['Cane_Low_Alcohol']
+    # cane_no_alcohol_df = category_df.loc['Cane']['No_Alcohol_volume'] * priceband_spirits['Cane_No_Alcohol']
 
-    gin_alcohol_df = category_df.loc['Gin and Genever']['Alcohol_volume'] * priceband_df['Gin_Alcohol']
-    gin_low_alcohol_df = category_df.loc['Gin and Genever']['Low_Alcohol_volume'] * priceband_df['Gin_Low_Alcohol']
-    gin_no_alcohol_df = category_df.loc['Gin and Genever']['No_Alcohol_volume'] * priceband_df['Gin_No_Alcohol']
+    gin_alcohol_df = category_df.loc['Gin and Genever']['Alcohol_volume'] * priceband_spirits['Gin_Alcohol']
+    gin_low_alcohol_df = category_df.loc['Gin and Genever']['Low_Alcohol_volume'] * priceband_spirits['Gin_Low_Alcohol']
+    # gin_no_alcohol_df = category_df.loc['Gin and Genever']['No_Alcohol_volume'] * priceband_spirits['Gin_No_Alcohol']
 
-    liqueurs_alcohol_df = category_df.loc['Liquers']['Alcohol_volume'] * priceband_df['Liqueurs_Alcohol']
-    liqueurs_low_alcohol_df = category_df.loc['Liquers']['Low_Alcohol_volume'] * priceband_df['Liqueurs_Low_Alcohol']
-    liqueurs_no_alcohol_df = category_df.loc['Liquers']['No_Alcohol_volume'] * priceband_df['Liqueurs_No_Alcohol']
+    liqueurs_alcohol_df = category_df.loc['Liquers']['Alcohol_volume'] * priceband_spirits['Liqueurs_Alcohol']
+    # liqueurs_low_alcohol_df = category_df.loc['Liquers']['Low_Alcohol_volume'] * priceband_spirits['Liqueurs_Low_Alcohol']
+    # liqueurs_no_alcohol_df = category_df.loc['Liquers']['No_Alcohol_volume'] * priceband_spirits['Liqueurs_No_Alcohol']
 
-    rum_alcohol_df = category_df.loc['Rum']['Alcohol_volume'] * priceband_df['Rum_Alcohol']
-    rum_low_alcohol_df = category_df.loc['Rum']['Low_Alcohol_volume'] * priceband_df['Rum_Low_Alcohol']
-    rum_no_alcohol_df = category_df.loc['Rum']['No_Alcohol_volume'] * priceband_df['Rum_No_Alcohol']
+    rum_alcohol_df = category_df.loc['Rum']['Alcohol_volume'] * priceband_spirits['Rum_Alcohol']
+    # rum_low_alcohol_df = category_df.loc['Rum']['Low_Alcohol_volume'] * priceband_spirits['Rum_Low_Alcohol']
+    # rum_no_alcohol_df = category_df.loc['Rum']['No_Alcohol_volume'] * priceband_spirits['Rum_No_Alcohol']
 
-    tequila_alcohol_df = category_df.loc['Tequila']['Alcohol_volume'] * priceband_df['Tequila_Alcohol']
-    tequila_low_alcohol_df = category_df.loc['Tequila']['Low_Alcohol_volume'] * priceband_df['Tequila_Low_Alcohol']
-    tequila_no_alcohol_df = category_df.loc['Tequila']['No_Alcohol_volume'] * priceband_df['Tequila_No_Alcohol']
+    tequila_alcohol_df = category_df.loc['Tequila']['Alcohol_volume'] * priceband_spirits['Tequila_Alcohol']
+    tequila_low_alcohol_df = category_df.loc['Tequila']['Low_Alcohol_volume'] * priceband_spirits['Tequila_Low_Alcohol']
+    # tequila_no_alcohol_df = category_df.loc['Tequila']['No_Alcohol_volume'] * priceband_spirits['Tequila_No_Alcohol']
 
-    vodka_alcohol_df = category_df.loc['Vodka']['Alcohol_volume'] * priceband_df['Vodka_Alcohol']
-    vodka_low_alcohol_df = category_df.loc['Vodka']['Low_Alcohol_volume'] * priceband_df['Vodka_Low_Alcohol']
-    vodka_no_alcohol_df = category_df.loc['Vodka']['No_Alcohol_volume'] * priceband_df['Vodka_No_Alcohol']
+    vodka_alcohol_df = category_df.loc['Vodka']['Alcohol_volume'] * priceband_spirits['Vodka_Alcohol']
+    vodka_low_alcohol_df = category_df.loc['Vodka']['Low_Alcohol_volume'] * priceband_spirits['Vodka_Low_Alcohol']
+    # vodka_no_alcohol_df = category_df.loc['Vodka']['No_Alcohol_volume'] * priceband_spirits['Vodka_No_Alcohol']
 
-    whisky_alcohol_df = category_df.loc['Whisky']['Alcohol_volume'] * priceband_df['Whisky_Alcohol']
-    whisky_low_alcohol_df = category_df.loc['Whisky']['Low_Alcohol_volume'] * priceband_df['Whisky_Low_Alcohol']
-    whisky_no_alcohol_df = category_df.loc['Whisky']['No_Alcohol_volume'] * priceband_df['Whisky_No_Alcohol']
+    whisky_alcohol_df = category_df.loc['Whisky']['Alcohol_volume'] * priceband_spirits['Whisky_Alcohol']
+    # whisky_low_alcohol_df = category_df.loc['Whisky']['Low_Alcohol_volume'] * priceband_spirits['Whisky_Low_Alcohol']
+    # whisky_no_alcohol_df = category_df.loc['Whisky']['No_Alcohol_volume'] * priceband_spirits['Whisky_No_Alcohol']
 
     # Wine
-    aperitif_alcohol_df = category_df.loc['Light Aperitifs']['Alcohol_volume'] \
-                          * priceband_df['Aperitif_Alcohol']
+    # aperitif_alcohol_df = category_df.loc['Light Aperitifs']['Alcohol_volume'] \
+    #                       * priceband_wine['Aperitif_Alcohol']
     aperitif_low_alcohol_df = category_df.loc['Light Aperitifs']['Low_Alcohol_volume'] \
-                              * priceband_df['Aperitif_Low_Alcohol']
-    aperitif_no_alcohol_df = category_df.loc['Light Aperitifs']['No_Alcohol_volume'] \
-                              * priceband_df['Aperitif_No_Alcohol']
+                              * priceband_wine['Aperitif_Low_Alcohol']
+    # aperitif_no_alcohol_df = category_df.loc['Light Aperitifs']['No_Alcohol_volume'] \
+    #                           * priceband_wine['Aperitif_No_Alcohol']
 
     fortified_alcohol_df = category_df.loc['Fortified Wine']['Alcohol_volume'] \
-                           * priceband_df['Fortified_Wine_Alcohol']
-    fortified_low_alcohol_df = category_df.loc['Fortified Wine']['Low_Alcohol_volume'] \
-                               * priceband_df['Fortified_Wine_Low_Alcohol']
-    fortified_no_alcohol_df = category_df.loc['Fortified Wine']['No_Alcohol_volume'] \
-                               * priceband_df['Fortified_Wine_No_Alcohol']
+                           * priceband_wine['Fortified_Wine_Alcohol']
+    # fortified_low_alcohol_df = category_df.loc['Fortified Wine']['Low_Alcohol_volume'] \
+    #                            * priceband_wine['Fortified_Wine_Low_Alcohol']
+    # fortified_no_alcohol_df = category_df.loc['Fortified Wine']['No_Alcohol_volume'] \
+    #                            * priceband_wine['Fortified_Wine_No_Alcohol']
 
     spark_alcohol_df = category_df.loc['Sparkling Wine']['Alcohol_volume'] \
-                           * priceband_df['Sparkling_Wine_Alcohol']
-    spark_low_alcohol_df = category_df.loc['Sparkling Wine']['Low_Alcohol_volume'] \
-                               * priceband_df['Sparkling_Wine_Low_Alcohol']
+                           * priceband_wine['Sparkling_Wine_Alcohol']
+    # spark_low_alcohol_df = category_df.loc['Sparkling Wine']['Low_Alcohol_volume'] \
+    #                            * priceband_wine['Sparkling_Wine_Low_Alcohol']
     spark_no_alcohol_df = category_df.loc['Sparkling Wine']['No_Alcohol_volume'] \
-                               * priceband_df['Sparkling_Wine_No_Alcohol']
+                               * priceband_wine['Sparkling_Wine_No_Alcohol']
 
     still_alcohol_df = category_df.loc['Still Wine']['Alcohol_volume'] \
-                           * priceband_df['Still_Wine_Alcohol']
+                           * priceband_still_wine['Still_Wine_Alcohol']
     still_low_alcohol_df = category_df.loc['Still Wine']['Low_Alcohol_volume'] \
-                               * priceband_df['Still_Wine_Low_Alcohol']
+                               * priceband_still_wine['Still_Wine_Low_Alcohol']
     still_no_alcohol_df = category_df.loc['Still Wine']['No_Alcohol_volume'] \
-                               * priceband_df['Still_Wine_No_Alcohol']
+                               * priceband_still_wine['Still_Wine_No_Alcohol']
 
 
     # RTDs
@@ -566,18 +567,89 @@ def category_to_priceband(priceband_df, category_df):
 
     # Spirits
 
-    beer_alcohol_df = pd.DataFrame(beer_alcohol_df)
-    beer_alcohol_df = beer_alcohol_df.rename(columns={0: 'Beer_Alcohol'})
-    beer_low_alcohol_df = pd.DataFrame(beer_low_alcohol_df)
-    beer_low_alcohol_df = beer_low_alcohol_df.rename(columns={0: 'Beer_Low_Alcohol'})
-    beer_no_alcohol_df = pd.DataFrame(beer_no_alcohol_df)
-    beer_no_alcohol_df = beer_no_alcohol_df.rename(columns={0: 'Beer_No_Alcohol'})
+    brandy_alcohol_df = pd.DataFrame(brandy_alcohol_df)
+    brandy_alcohol_df = brandy_alcohol_df.rename(columns={0: 'Brandy_Alcohol'})
+    brandy_low_alcohol_df = pd.DataFrame(brandy_low_alcohol_df)
+    brandy_low_alcohol_df = brandy_low_alcohol_df.rename(columns={0: 'Brandy_Low_Alcohol'})
+
+    cane_alcohol_df = pd.DataFrame(cane_alcohol_df)
+    cane_alcohol_df = cane_alcohol_df.rename(columns={0: 'Cane_Alcohol'})
+
+    gin_alcohol_df = pd.DataFrame(gin_alcohol_df)
+    gin_alcohol_df = gin_alcohol_df.rename(columns={0: 'Gin_Alcohol'})
+    gin_low_alcohol_df = pd.DataFrame(gin_low_alcohol_df)
+    gin_low_alcohol_df = gin_low_alcohol_df.rename(columns={0: 'Gin_Low_Alcohol'})
+
+    liqueurs_alcohol_df = pd.DataFrame(liqueurs_alcohol_df)
+    liqueurs_alcohol_df = liqueurs_alcohol_df.rename(columns={0: 'Liqueurs_Alcohol'})
+
+    rum_alcohol_df = pd.DataFrame(rum_alcohol_df)
+    rum_alcohol_df = rum_alcohol_df.rename(columns={0: 'Rum_Alcohol'})
+
+    tequila_alcohol_df = pd.DataFrame(tequila_alcohol_df)
+    tequila_alcohol_df = tequila_alcohol_df.rename(columns={0: 'Tequila_Alcohol'})
+    tequila_low_alcohol_df = pd.DataFrame(tequila_low_alcohol_df)
+    tequila_low_alcohol_df = tequila_low_alcohol_df.rename(columns={0: 'Tequila_Low_Alcohol'})
+
+    vodka_alcohol_df = pd.DataFrame(vodka_alcohol_df)
+    vodka_alcohol_df = vodka_alcohol_df.rename(columns={0: 'Vodka_Alcohol'})
+    vodka_low_alcohol_df = pd.DataFrame(vodka_low_alcohol_df)
+    vodka_low_alcohol_df = vodka_low_alcohol_df.rename(columns={0: 'Vodka_Low_Alcohol'})
+
+    whisky_alcohol_df = pd.DataFrame(whisky_alcohol_df)
+    whisky_alcohol_df = whisky_alcohol_df.rename(columns={0: 'Whisky_Alcohol'})
+
+    # Wine
+
+    aperitif_low_alcohol_df = pd.DataFrame(aperitif_low_alcohol_df)
+    aperitif_low_alcohol_df = aperitif_low_alcohol_df.rename(columns={0: 'Aperitif_Low_Alcohol'})
+
+    fortified_alcohol_df = pd.DataFrame(fortified_alcohol_df)
+    fortified_alcohol_df = fortified_alcohol_df.rename(columns={0: 'Fortified_Alcohol'})
+
+    spark_alcohol_df = pd.DataFrame(spark_alcohol_df)
+    spark_alcohol_df = spark_alcohol_df.rename(columns={0: 'Sparkling_Alcohol'})
+    spark_no_alcohol_df = pd.DataFrame(spark_no_alcohol_df)
+    spark_no_alcohol_df = spark_no_alcohol_df.rename(columns={0: 'Sparkling_No_Alcohol'})
+
+    still_alcohol_df = pd.DataFrame(still_alcohol_df)
+    still_alcohol_df = still_alcohol_df.rename(columns={0: 'Still_Alcohol'})
+    still_low_alcohol_df = pd.DataFrame(still_low_alcohol_df)
+    still_low_alcohol_df = still_low_alcohol_df.rename(columns={0: 'Still_Low_Alcohol'})
+    still_no_alcohol_df = pd.DataFrame(still_no_alcohol_df)
+    still_no_alcohol_df = still_no_alcohol_df.rename(columns={0: 'Still_No_Alcohol'})
 
 
-    # frames = [brandy_df, gin_df, cane_df, vodka_df, liqueurs_df, whisky_df, rum_df,
-    #           spark_df, still_df, fort_df, cider_fabs_df, beer_df]
-    # df = pd.concat(frames, axis=1)
+    frames = [still_alcohol_df.T, still_low_alcohol_df.T, still_no_alcohol_df.T,
+              spark_alcohol_df.T, spark_no_alcohol_df.T,
+              fortified_alcohol_df.T,
+              aperitif_low_alcohol_df.T,
+              brandy_alcohol_df.T, brandy_low_alcohol_df.T,
+              cane_alcohol_df.T,
+              gin_alcohol_df.T, gin_low_alcohol_df.T,
+              liqueurs_alcohol_df.T,
+              rum_alcohol_df.T,
+              tequila_alcohol_df.T, tequila_low_alcohol_df.T,
+              vodka_alcohol_df.T, vodka_low_alcohol_df.T,
+              whisky_alcohol_df.T,
+              cider_alcohol_df.T, cider_low_alcohol_df.T, cider_no_alcohol_df.T,
+              fabs_alcohol_df.T, fabs_low_alcohol_df.T, fabs_no_alcohol_df.T,
+              beer_alcohol_df.T, beer_low_alcohol_df.T, beer_no_alcohol_df.T]
+
+    df = pd.concat(frames)
+
     return df
+def final_outut_to_csv(year):
+    """..."""
+    df_spirits = get_spirits_price_band(year)
+    df_beer = get_beer_price_band(year)
+    df_rtds = get_Rtds_price_band(year)
+    df_wine = get_wine_price_band(year)
+    df_still_wine = get_still_wine_price_band(year)
+    df_estimates = get_IWSR_data_estimates('2020')
+    df = category_to_priceband(df_estimates, df_spirits, df_beer, df_rtds, df_wine, df_still_wine)
+    df = df.fillna(0)
+
 
 #%%
 #dff = get_IWSR_data_estimates('2020')
@@ -588,12 +660,14 @@ df_wine = get_wine_price_band('2020')
 df_still_wine = get_still_wine_price_band('2020')
 #%%
 df_estimates = get_IWSR_data_estimates('2020')
-#dff = df.T
+#%%
+dff = df_still_wine.T
 #%%
 still_wine_alcohol_df = df_estimates.loc['Still Wine']['Alcohol_volume'] * df_still_wine['Still_Wine_Alcohol']
 still_wine_alcohol_df = still_wine_alcohol_df.rename(columns={0: 'Still_Wine_Alcohol'})
 #%%
-
+df = category_to_priceband(df_estimates, df_spirits, df_beer, df_rtds, df_wine, df_still_wine)
+df = df.fillna(0)
 #%%
 # df1 = get_spirits_price_band('2020')
 # df2 = get_beer_price_band('2020')
