@@ -50,8 +50,8 @@ def get_wine_price_band(year):
     aperitif_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Aperitif']
     fotified_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Fortified']
     sparkling_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Sparkling']
-    still_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Still wine']
-    still_wine_df['PRODUCTSUBCATEGORY'] = df['PRODUCTSUBCATEGORY'].apply(lambda x: 'Unfortified')
+    # still_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Still wine']
+    # still_wine_df['PRODUCTSUBCATEGORY'] = df['PRODUCTSUBCATEGORY'].apply(lambda x: 'Unfortified')
 
 
     # Create price band column to classify the subcategory (low price, value, premium, etc)
@@ -61,21 +61,19 @@ def get_wine_price_band(year):
         price_band_wine_conversion, args=['Sparkling Wine'])
     fotified_wine_df['Price_band'] = fotified_wine_df['Price_per_subcategory'].apply(
         price_band_wine_conversion, args=['Still Wine'])
-    still_wine_df['Price_band'] = still_wine_df['Price_per_subcategory'].apply(
-        price_band_wine_conversion, args=['Still Wine'])
-    df = pd.concat([aperitif_wine_df, still_wine_df, sparkling_wine_df, fotified_wine_df])
+    # still_wine_df['Price_band'] = still_wine_df['Price_per_subcategory'].apply(
+    #     price_band_wine_conversion, args=['Still Wine'])
+    df = pd.concat([aperitif_wine_df, sparkling_wine_df, fotified_wine_df])
 
     # df = df.groupby(['PRODUCTSUBCATEGORY', 'Price_band']).agg('sum')[['SALESVOLUME']]
 
     df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
     # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
     aperitif_df = (df.T.Aperitif)
-    df_mod = pd.DataFrame(data=np.zeros(6), columns=['Zeros'], index=['Accessible Premium',
-                                                                    'Low Price',
+    df_mod = pd.DataFrame(data=np.zeros(5), columns=['Zeros'], index=['Accessible Premium',
                                                                     'Premium',
                                                                     'Super Premium',
                                                                     'Ultra Premium',
-                                                                    'Affordable',
                                                                     'Value'])
     df_mod = alcohol_type_classifier('Aperitif', aperitif_df, df_mod)
     df_mod.drop('Zeros', axis='columns', inplace=True)
@@ -83,8 +81,53 @@ def get_wine_price_band(year):
     df_mod = alcohol_type_classifier('Fortified_Wine', fortified_df, df_mod)
     sparkling_df = (df.T.Sparkling)
     df_mod = alcohol_type_classifier('Sparkling_Wine', sparkling_df, df_mod)
+
+
+
+    # calculate proportions of all subcategories
+    for col in df_mod.columns:
+        df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
+
+    df_mod = df_mod.fillna(0)
+
+    return df_mod
+def get_still_wine_price_band(year):
+    """Function to read in and preprocess the Data Orbis file and split the data's sub categories
+        into price bands for wines
+
+    : param year: year of data analysis
+    : return: data frame of price band splits per sub category
+    """
+    df = get_product_category(year, 'Wine')
+
+    # Create a price per subcategory column to get a unit price for every subcategory
+    df['Price_per_subcategory'] = (df['PRICE'] / df['SALESQUANTITY'])
+
+    #Seperate the data by Still wine, aperitif, fortified wine, sparkling wine
+    still_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Still wine']
+    still_wine_df['PRODUCTSUBCATEGORY'] = df['PRODUCTSUBCATEGORY'].apply(lambda x: 'Unfortified')
+
+
+    # Create price band column to classify the subcategory (low price, value, premium, etc)
+
+    still_wine_df['Price_band'] = still_wine_df['Price_per_subcategory'].apply(
+        price_band_wine_conversion, args=['Still Wine'])
+    df = still_wine_df
+
+    # df = df.groupby(['PRODUCTSUBCATEGORY', 'Price_band']).agg('sum')[['SALESVOLUME']]
+
+    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
+    # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
     still_df = (df.T.Unfortified)
+    df_mod = pd.DataFrame(data=np.zeros(7), columns=['Zeros'], index=['Accessible Premium',
+                                                                    'Low Price',
+                                                                    'Premium',
+                                                                    'Super Premium',
+                                                                    'Ultra Premium',
+                                                                    'Affordable',
+                                                                    'Value'])
     df_mod = alcohol_type_classifier('Still_Wine', still_df, df_mod)
+    df_mod.drop('Zeros', axis='columns', inplace=True)
 
     # calculate proportions of all subcategories
     for col in df_mod.columns:
@@ -179,19 +222,7 @@ def get_Rtds_price_band(year):
     df_mod = df_mod.fillna(0)
 
     return df_mod
-#%%
-df = get_beer_price_band('2020')
 
-#%%
-df = get_wine_price_band('2020')
-#%%
-
-#%%
-
-#sd = df['PRODUCTDESCRIPTION'].value_counts()
-#%%
-
-#%%
 def convert_product_description_beer_and_rtds(df):
     """..."""
     df['PRODUCTDESCRIPTION'] = df['PRODUCTDESCRIPTION'].apply(lambda x: re.split('\s', x)[-1])
@@ -257,6 +288,9 @@ def get_spirits_price_band(year):
     # Create a price per subcategory column to get a unit price for every subcategory
     df['Price_per_subcategory'] = (df['PRICE'] / df['SALESQUANTITY'])
 
+    # Convert all cognac's to brandy
+    df['PRODUCTSUBCATEGORY'] = df['PRODUCTSUBCATEGORY'].replace(['Cognac'], 'Brandy')
+
     # Apply price and column
     df['Price_band'] = df['Price_per_subcategory'].apply(
         price_band_spirit_conversion)
@@ -276,8 +310,6 @@ def get_spirits_price_band(year):
     df_mod.drop('Zeros', axis='columns', inplace=True)
     cane_df = df.T.Cane
     df_mod = alcohol_type_classifier('Cane', cane_df, df_mod)
-    cognac_df = df.T.Cognac
-    df_mod = alcohol_type_classifier('Cognac', cognac_df, df_mod)
     gin_df = df.T.Gin
     df_mod = alcohol_type_classifier('Gin', gin_df, df_mod)
     liqueurs_df = df.T.Liqueurs
@@ -413,70 +445,95 @@ def get_IWSR_data_estimates(year):
        : return: preprocessed df with IWSR data with stats group as index
        """
 
-    base_dir = DATA_DIRECTORY / 'IWSR' / year / ''
+    base_dir = DATA_DIRECTORY / 'Estimates' / year / 'Nikki_estimates'
     path = get_file_in_directory(base_dir)
 
-    df = pd.read_excel(path, sheet_name='REVISED', skiprows=2)
-    df_name = df['R Million / Million Litres']
-    df = df.iloc[:16, 9:12]
-    sales_volume_df = df['Sales Volumes.2'] * 1000000
-    df['Sales Volume'] = sales_volume_df
+    df = pd.read_excel(path, sheet_name='Porportions')
+    df_name = df['IWSR_Category2.1']
+    df = df.iloc[:18, 15:]
+    df['Unnamed: 15'] = df['Unnamed: 15'] * 1000
+    #df['Sales Volume'] = sales_volume_df
     df['Index'] = df_name
+    df['Alcohol_volume'] = df['Alcoholic'] * df['Unnamed: 15']
+    df['No_Alcohol_volume'] = df['No Alcohol'] * df['Unnamed: 15']
+    df['Low_Alcohol_volume'] = df['Low Alcohol'] * df['Unnamed: 15']
     df = df.set_index(['Index'])
 
     return df
 
 def category_to_priceband(priceband_df, category_df):
     """..."""
-    brandy_df = priceband_df['Brandy'] * category_df.loc['Brandy']['Sales Volume']
-    gin_df = priceband_df['Gin'] * category_df.loc['Gin and Genever']['Sales Volume']
-    cane_df = priceband_df['Cane'] * category_df.loc['Cane']['Sales Volume']
-    vodka_df = priceband_df['Vodka'] * category_df.loc['Vodka']['Sales Volume']
-    liqueurs_df = priceband_df['Liqueurs'] * category_df.loc['Liqueurs']['Sales Volume']
-    whisky_df = priceband_df['Whisky'] * category_df.loc['Whisky']['Sales Volume']
-    rum_df = priceband_df['Rum'] * category_df.loc['Rum']['Sales Volume']
-    #tequila_df = priceband_df['Brandy'] * category_df.loc['Brandy']['Sales Volume']
-    spark_df = priceband_df['Sparkling Wine'] * category_df.loc['Sparkling Wine']['Sales Volume']
-    still_df = priceband_df['Still Wine'] * category_df.loc['Still Wine']['Sales Volume']
-    fort_df = priceband_df['Fortified Wine'] * category_df.loc['Fortified Wine & Wine Aperitifs']['Sales Volume']
-    cider_fabs_df = priceband_df['Cider and Fabs'] * category_df.loc['Cider & FABs']['Sales Volume']
-    beer_df = priceband_df['Beer'] * category_df.loc['Beer']['Sales Volume']
+    # RTDS
+    cider_alcohol_df = category_df.loc['Cider']['Alcohol_volume'] * priceband_df['Cider_Alcohol']
+    cider_low_alcohol_df = category_df.loc['Cider']['Low_Alcohol_volume'] * priceband_df['Cider_Low_Alcohol']
+    cider_low_alcohol_df = category_df.loc['Cider']['No_Alcohol_volume'] * priceband_df['Cider_No_Alcohol']
+    fabs_alcohol_df = category_df.loc['RTDs']['Alcohol_volume'] * priceband_df['Fabs_Alcohol']
+    fabs_low_alcohol_df = category_df.loc['RTDs']['Low_Alcohol_volume'] * priceband_df['Fabs_Low_Alcohol']
+    fabs_low_alcohol_df = category_df.loc['RTDs']['No_Alcohol_volume'] * priceband_df['Fabs_No_Alcohol']
+
+    # Beers
+    beer_alcohol_df = category_df.loc['Beer']['Alcohol_volume'] * priceband_df['Beer_Alcohol']
+    beer_low_alcohol_df = category_df.loc['Beer']['Low_Alcohol_volume'] * priceband_df['Beer_Low_Alcohol']
+    beer_low_alcohol_df = category_df.loc['Beer']['No_Alcohol_volume'] * priceband_df['Beer_No_Alcohol']
+
+    # Spirits
+    brandy_alcohol_df = category_df.loc['Brandy']['Alcohol_volume'] * priceband_df['Brandy_Alcohol']
+    brandy_low_alcohol_df = category_df.loc['Brandy']['Low_Alcohol_volume'] * priceband_df['Brandy_Low_Alcohol']
+    brandy_low_alcohol_df = category_df.loc['Brandy']['No_Alcohol_volume'] * priceband_df['Brandy_No_Alcohol']
+
+    cane_alcohol_df = category_df.loc['Cane']['Alcohol_volume'] * priceband_df['Cane_Alcohol']
+    cane_low_alcohol_df = category_df.loc['Cane']['Low_Alcohol_volume'] * priceband_df['Cane_Low_Alcohol']
+    cane_low_alcohol_df = category_df.loc['Cane']['No_Alcohol_volume'] * priceband_df['Cane_No_Alcohol']
+
+    gin_alcohol_df = category_df.loc['Gin and Genever']['Alcohol_volume'] * priceband_df['Gin_Alcohol']
+    gin_low_alcohol_df = category_df.loc['Gin and Genever']['Low_Alcohol_volume'] * priceband_df['Gin_Low_Alcohol']
+    gin_low_alcohol_df = category_df.loc['Gin and Genever']['No_Alcohol_volume'] * priceband_df['Gin_No_Alcohol']
+
+    liqueurs_alcohol_df = category_df.loc['Liquers']['Alcohol_volume'] * priceband_df['Liqueurs_Alcohol']
+    liqueurs_low_alcohol_df = category_df.loc['Liquers']['Low_Alcohol_volume'] * priceband_df['Liqueurs_Low_Alcohol']
+    liqueurs_low_alcohol_df = category_df.loc['Liquers']['No_Alcohol_volume'] * priceband_df['Liqueurs_No_Alcohol']
+
+    rum_alcohol_df = category_df.loc['Rum']['Alcohol_volume'] * priceband_df['Rum_Alcohol']
+    rum_low_alcohol_df = category_df.loc['Rum']['Low_Alcohol_volume'] * priceband_df['Rum_Low_Alcohol']
+    rum_low_alcohol_df = category_df.loc['Rum']['No_Alcohol_volume'] * priceband_df['Rum_No_Alcohol']
+
+    tequila_alcohol_df = category_df.loc['Tequila']['Alcohol_volume'] * priceband_df['Tequila_Alcohol']
+    tequila_low_alcohol_df = category_df.loc['Tequila']['Low_Alcohol_volume'] * priceband_df['Tequila_Low_Alcohol']
+    tequila_low_alcohol_df = category_df.loc['Tequila']['No_Alcohol_volume'] * priceband_df['Tequila_No_Alcohol']
+
+    vodka_alcohol_df = category_df.loc['Vodka']['Alcohol_volume'] * priceband_df['Vodka_Alcohol']
+    vodka_low_alcohol_df = category_df.loc['Vodka']['Low_Alcohol_volume'] * priceband_df['Vodka_Low_Alcohol']
+    vodka_low_alcohol_df = category_df.loc['Vodka']['No_Alcohol_volume'] * priceband_df['Vodka_No_Alcohol']
+
+    whisky_alcohol_df = category_df.loc['Whisky']['Alcohol_volume'] * priceband_df['Whisky_Alcohol']
+    whisky_low_alcohol_df = category_df.loc['Whisky']['Low_Alcohol_volume'] * priceband_df['Whisky_Low_Alcohol']
+    whisky_low_alcohol_df = category_df.loc['Whisky']['No_Alcohol_volume'] * priceband_df['Whisky_No_Alcohol']
+
 
     brandy_df = pd.DataFrame(brandy_df)
     brandy_df = brandy_df.rename(columns={0: 'Brandy'})
-    gin_df = pd.DataFrame(gin_df)
-    gin_df = gin_df.rename(columns={0: 'Gin and Genever'})
-    cane_df = pd.DataFrame(cane_df)
-    cane_df = cane_df.rename(columns={0: 'Cane'})
-    vodka_df = pd.DataFrame(vodka_df)
-    vodka_df = vodka_df.rename(columns={0: 'Vodka'})
-    liqueurs_df = pd.DataFrame(liqueurs_df)
-    liqueurs_df = liqueurs_df.rename(columns={0: 'Liqueurs'})
-    whisky_df = pd.DataFrame(whisky_df)
-    whisky_df = whisky_df.rename(columns={0: 'Whisky'})
-    rum_df = pd.DataFrame(rum_df)
-    rum_df = rum_df.rename(columns={0: 'Rum'})
-    spark_df = pd.DataFrame(spark_df)
-    spark_df = spark_df.rename(columns={0: 'Sparkling Wine'})
-    still_df = pd.DataFrame(still_df)
-    still_df = still_df.rename(columns={0: 'Still wine'})
-    fort_df = pd.DataFrame(fort_df)
-    fort_df = fort_df.rename(columns={0: 'Fortified Wine & Wine Aperitifs'})
-    cider_fabs_df = pd.DataFrame(cider_fabs_df)
-    cider_fabs_df = cider_fabs_df.rename(columns={0: 'Cider & FABs'})
-    beer_df = pd.DataFrame(beer_df)
-    beer_df = beer_df.rename(columns={0: 'Beer'})
 
-    frames = [brandy_df, gin_df, cane_df, vodka_df, liqueurs_df, whisky_df, rum_df,
-              spark_df, still_df, fort_df, cider_fabs_df, beer_df]
-    df = pd.concat(frames, axis=1)
+
+    # frames = [brandy_df, gin_df, cane_df, vodka_df, liqueurs_df, whisky_df, rum_df,
+    #           spark_df, still_df, fort_df, cider_fabs_df, beer_df]
+    # df = pd.concat(frames, axis=1)
     return df
 
 #%%
 #dff = get_IWSR_data_estimates('2020')
-df = get_spirits_price_band('2020')
+df_spirits = get_spirits_price_band('2020')
+df_beer = get_beer_price_band('2020')
+df_rtds = get_Rtds_price_band('2020')
 #%%
-dff = df.T
+df_wine = get_wine_price_band('2020')
+df_still_wine = get_still_wine_price_band('2020')
+#%%
+df_estimates = get_IWSR_data_estimates('2020')
+#dff = df.T
+#%%
+still_wine_alcohol_df = df_estimates.loc['Still Wine']['Alcohol_volume'] * df_still_wine['Still_Wine_Alcohol']
+still_wine_alcohol_df = still_wine_alcohol_df.rename(columns={0: 'Still_Wine_Alcohol'})
+#%%
 
 #%%
 # df1 = get_spirits_price_band('2020')
