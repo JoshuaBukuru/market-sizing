@@ -242,9 +242,9 @@ print('Hello')
 #     base_df = base_df.set_index('index')
 #
 #     output_path = f'out\market_size_{current_year}.csv'
-#     base_df.loc[['Brandy', 'Gin', 'Vodka', 'Liqueurs', 'Whisky', 'Beer', 'Sparkling Wine', 'Wine Aperitif',
-#            'Fortified Wine 1', 'Still Wine', 'Fortified Wine 2', 'CIDER & RTDs', 'Ciders',
-#            'FABs']].to_csv(output_path)
+# #     base_df.loc[['Brandy', 'Gin', 'Vodka', 'Liqueurs', 'Whisky', 'Beer', 'Sparkling Wine', 'Wine Aperitif',
+# #            'Fortified Wine 1', 'Still Wine', 'Fortified Wine 2', 'CIDER & RTDs', 'Ciders',
+# #            'FABs']].to_csv(output_path)
 
 
 

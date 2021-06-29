@@ -28,13 +28,15 @@ def get_product_category(year, product_category):
     # Rename Low-Alchol to Low_Alcohol and No-Alcohol to No_Alcohol
     df['INDEX'] = df['INDEX'].apply(lambda x: 'Low_Alcohol' if x == 'Low-Alcohol' else
     'No_Alcohol' if x == 'No-Alcohol' else
-    'Energy' if x == 'Energy' else
-    'Alcohol')
+    'Alcohol' if x == 'Alcohol' else
+    'Low_AlcoholEnergy' if x == 'Low-AlcoholEnergy' else
+    'No_AlcoholEnergy' if x == 'No-AlcoholEnergy' else
+    'Energy')
 
 
     return df
 
-def get_wine_price_band(year):
+def get_spark_wine_price_band(year, Value_Volume):
     """Function to read in and preprocess the Data Orbis file and split the data's sub categories
         into price bands for wines
 
@@ -47,40 +49,33 @@ def get_wine_price_band(year):
     df['Price_per_subcategory'] = (df['PRICE'] / df['SALESQUANTITY'])
 
     #Seperate the data by Still wine, aperitif, fortified wine, sparkling wine
-    aperitif_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Aperitif']
-    fotified_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Fortified']
     sparkling_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Sparkling']
+
     # still_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Still wine']
     # still_wine_df['PRODUCTSUBCATEGORY'] = df['PRODUCTSUBCATEGORY'].apply(lambda x: 'Unfortified')
 
 
     # Create price band column to classify the subcategory (low price, value, premium, etc)
-    aperitif_wine_df['Price_band'] = aperitif_wine_df['Price_per_subcategory'].apply(
-        price_band_wine_conversion, args=['Still Wine'])
     sparkling_wine_df['Price_band'] = sparkling_wine_df['Price_per_subcategory'].apply(
         price_band_wine_conversion, args=['Sparkling Wine'])
-    fotified_wine_df['Price_band'] = fotified_wine_df['Price_per_subcategory'].apply(
-        price_band_wine_conversion, args=['Still Wine'])
-    # still_wine_df['Price_band'] = still_wine_df['Price_per_subcategory'].apply(
-    #     price_band_wine_conversion, args=['Still Wine'])
-    df = pd.concat([aperitif_wine_df, sparkling_wine_df, fotified_wine_df])
+
+    df = sparkling_wine_df
+
 
     # df = df.groupby(['PRODUCTSUBCATEGORY', 'Price_band']).agg('sum')[['SALESVOLUME']]
 
-    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
+    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[[Value_Volume]]
     # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
-    aperitif_df = (df.T.Aperitif)
+    sparkling_df = (df.T.Sparkling)
     df_mod = pd.DataFrame(data=np.zeros(5), columns=['Zeros'], index=['Accessible Premium',
                                                                     'Premium',
                                                                     'Super Premium',
                                                                     'Ultra Premium',
                                                                     'Value'])
-    df_mod = alcohol_type_classifier('Aperitif', aperitif_df, df_mod)
-    df_mod.drop('Zeros', axis='columns', inplace=True)
-    fortified_df = (df.T.Fortified)
-    df_mod = alcohol_type_classifier('Fortified_Wine', fortified_df, df_mod)
-    sparkling_df = (df.T.Sparkling)
+
     df_mod = alcohol_type_classifier('Sparkling_Wine', sparkling_df, df_mod)
+    df_mod.drop('Zeros', axis='columns', inplace=True)
+
 
 
 
@@ -91,7 +86,7 @@ def get_wine_price_band(year):
     df_mod = df_mod.fillna(0)
 
     return df_mod
-def get_still_wine_price_band(year):
+def get_still_wine_price_band(year, Value_Volume):
     """Function to read in and preprocess the Data Orbis file and split the data's sub categories
         into price bands for wines
 
@@ -106,17 +101,23 @@ def get_still_wine_price_band(year):
     #Seperate the data by Still wine, aperitif, fortified wine, sparkling wine
     still_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Still wine']
     still_wine_df['PRODUCTSUBCATEGORY'] = df['PRODUCTSUBCATEGORY'].apply(lambda x: 'Unfortified')
+    fotified_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Fortified']
 
+    aperitif_wine_df = df[df['PRODUCTSUBCATEGORY'] == 'Aperitif']
 
     # Create price band column to classify the subcategory (low price, value, premium, etc)
-
+    aperitif_wine_df['Price_band'] = aperitif_wine_df['Price_per_subcategory'].apply(
+        price_band_wine_conversion, args=['Still Wine'])
     still_wine_df['Price_band'] = still_wine_df['Price_per_subcategory'].apply(
         price_band_wine_conversion, args=['Still Wine'])
-    df = still_wine_df
+
+    fotified_wine_df['Price_band'] = fotified_wine_df['Price_per_subcategory'].apply(
+        price_band_wine_conversion, args=['Still Wine'])
+    df = pd.concat([still_wine_df, aperitif_wine_df, fotified_wine_df])
 
     # df = df.groupby(['PRODUCTSUBCATEGORY', 'Price_band']).agg('sum')[['SALESVOLUME']]
 
-    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
+    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[[Value_Volume]]
     # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
     still_df = (df.T.Unfortified)
     df_mod = pd.DataFrame(data=np.zeros(7), columns=['Zeros'], index=['Accessible Premium',
@@ -128,6 +129,10 @@ def get_still_wine_price_band(year):
                                                                     'Value'])
     df_mod = alcohol_type_classifier('Still_Wine', still_df, df_mod)
     df_mod.drop('Zeros', axis='columns', inplace=True)
+    fortified_df = (df.T.Fortified)
+    df_mod = alcohol_type_classifier('Fortified_Wine', fortified_df, df_mod)
+    aperitif_df = df.T.Aperitif
+    df_mod = alcohol_type_classifier('Aperitif', aperitif_df, df_mod)
 
     # calculate proportions of all subcategories
     for col in df_mod.columns:
@@ -153,11 +158,15 @@ def alcohol_type_classifier(name, category, df_mod):
         df_mod[name + '_No_Alcohol'] = category.No_Alcohol.T
     if 'Energy' in category:
         df_mod[name + '_Energy'] = category.Energy.T
+    if 'Low_AlcoholEnergy' in category:
+        df_mod[name + '_Low_AlcoholEnergy'] = category.Energy.T
+    if 'No_AlcoholEnergy' in category:
+        df_mod[name + '_No_AlcoholEnergy'] = category.Energy.T
 
     return df_mod
 
 
-def get_beer_price_band(year):
+def get_beer_price_band(year, Value_Volume):
     """" Function to read in and preprocess the Data Orbis file and split the data's sub categories
         into price bands for beers
 
@@ -168,7 +177,7 @@ def get_beer_price_band(year):
     df = convert_product_description_beer_and_rtds(df)
 
     # # Aggregate by subcategory, alcohol presence and price band
-    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
+    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[[Value_Volume]]
     # #
     # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
     beer_df = df.T.Beer
@@ -189,7 +198,7 @@ def get_beer_price_band(year):
 
     return df_mod
 
-def get_Rtds_price_band(year):
+def get_Rtds_price_band(year, Value_Volume):
     """Function to read in and preprocess the Data Orbis file and split the data's sub categories
         into price bands for RTDs
 
@@ -200,7 +209,7 @@ def get_Rtds_price_band(year):
     df = convert_product_description_beer_and_rtds(df)
 
     # # Aggregate by subcategory, alcohol presence and price band
-    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
+    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[[Value_Volume]]
     # #
     # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
     cider_df = df.T.Cider
@@ -276,7 +285,7 @@ def search_product_description(search, txt):
         else:
             return False
 
-def get_spirits_price_band(year):
+def get_spirits_price_band(year, Value_Volume):
     """Function to read in and preprocess the Data Orbis file and split the data's sub categories
         into price bands for wines
 
@@ -296,7 +305,7 @@ def get_spirits_price_band(year):
         price_band_spirit_conversion)
 
     # Aggregate by subcategory, alcohol presence and price band
-    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[['SALESVOLUME']]
+    df = df.groupby(['PRODUCTSUBCATEGORY', 'INDEX', 'Price_band']).agg('sum')[[Value_Volume]]
 
     # Get the aggregated subcategories and apply classifier (low alc, no alc, etc) and rename columns
     brandy_df = df.T.Brandy
@@ -460,7 +469,7 @@ def get_IWSR_data_estimates(year):
     df = df.set_index(['Index'])
 
     return df
-#%%
+
 def category_to_priceband(category_df, priceband_spirits, priceband_beer, priceband_rtds, priceband_wine,
                           priceband_still_wine):
     """..."""
@@ -639,18 +648,25 @@ def category_to_priceband(category_df, priceband_spirits, priceband_beer, priceb
     df = pd.concat(frames)
 
     return df
+
 def final_outut_to_csv(year):
     """..."""
-    df_spirits = get_spirits_price_band(year)
-    df_beer = get_beer_price_band(year)
-    df_rtds = get_Rtds_price_band(year)
-    df_wine = get_wine_price_band(year)
-    df_still_wine = get_still_wine_price_band(year)
-    df_estimates = get_IWSR_data_estimates('2020')
-    df = category_to_priceband(df_estimates, df_spirits, df_beer, df_rtds, df_wine, df_still_wine)
+    df_spirits = get_spirits_price_band(year, 'SALESVOLUME')
+    df_beer = get_beer_price_band(year, 'SALESVOLUME')
+    df_rtds = get_Rtds_price_band(year, 'SALESVOLUME')
+    df_wine = get_spark_wine_price_band(year, 'SALESVOLUME')
+    df_still_wine = get_still_wine_price_band(year, 'SALESVOLUME')
+    df = pd.concat([df_still_wine, df_wine, df_rtds, df_beer, df_spirits], axis=1)
     df = df.fillna(0)
 
+    output_path = f'out\price_band_Nikki{year}.csv'
+    df.to_csv(output_path)
+    return df
 
+#%%
+df = final_outut_to_csv('2020')
+#%%
+dff = df.T
 #%%
 #dff = get_IWSR_data_estimates('2020')
 df_spirits = get_spirits_price_band('2020')
