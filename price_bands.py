@@ -79,9 +79,9 @@ def get_spark_wine_price_band(year, Value_Volume):
 
 
 
-    # calculate proportions of all subcategories
-    for col in df_mod.columns:
-        df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
+    # # calculate proportions of all subcategories
+    # for col in df_mod.columns:
+    #     df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
 
     df_mod = df_mod.fillna(0)
 
@@ -134,9 +134,9 @@ def get_still_wine_price_band(year, Value_Volume):
     aperitif_df = df.T.Aperitif
     df_mod = alcohol_type_classifier('Aperitif', aperitif_df, df_mod)
 
-    # calculate proportions of all subcategories
-    for col in df_mod.columns:
-        df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
+    # # calculate proportions of all subcategories
+    # for col in df_mod.columns:
+    #     df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
 
     df_mod = df_mod.fillna(0)
 
@@ -190,9 +190,9 @@ def get_beer_price_band(year, Value_Volume):
     df_mod = alcohol_type_classifier('Beer', beer_df, df_mod)
     df_mod.drop('Zeros', axis='columns', inplace=True)
 
-    # calculate proportions of all subcategories
-    for col in df_mod.columns:
-        df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
+    # # calculate proportions of all subcategories
+    # for col in df_mod.columns:
+    #     df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
 
     df_mod = df_mod.fillna(0)
 
@@ -224,9 +224,9 @@ def get_Rtds_price_band(year, Value_Volume):
     fabs_df = df.T.Fabs
     df_mod = alcohol_type_classifier('Fabs', fabs_df, df_mod)
 
-    # calculate proportions of all subcategories
-    for col in df_mod.columns:
-        df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
+    # # calculate proportions of all subcategories
+    # for col in df_mod.columns:
+    #     df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
 
     df_mod = df_mod.fillna(0)
 
@@ -332,9 +332,9 @@ def get_spirits_price_band(year, Value_Volume):
     whisky_df = df.T.Whisky
     df_mod = alcohol_type_classifier('Whisky', whisky_df, df_mod)
 
-    # calculate proportions of all subcategories
-    for col in df_mod.columns:
-        df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
+    # # calculate proportions of all subcategories
+    # for col in df_mod.columns:
+    #     df_mod[col] = df_mod[col].apply(lambda x: x / (df_mod[col].sum()))
 
     df_mod = df_mod.fillna(0)
 
@@ -649,57 +649,44 @@ def category_to_priceband(category_df, priceband_spirits, priceband_beer, priceb
 
     return df
 
-def final_outut_to_csv(year):
+def final_outut_to_csv(year, Value_Volume):
     """..."""
-    df_spirits = get_spirits_price_band(year, 'SALESVOLUME')
-    df_beer = get_beer_price_band(year, 'SALESVOLUME')
-    df_rtds = get_Rtds_price_band(year, 'SALESVOLUME')
-    df_wine = get_spark_wine_price_band(year, 'SALESVOLUME')
-    df_still_wine = get_still_wine_price_band(year, 'SALESVOLUME')
+    df_spirits = get_spirits_price_band(year, Value_Volume)
+    df_beer = get_beer_price_band(year, Value_Volume)
+    df_rtds = get_Rtds_price_band(year, Value_Volume)
+    df_wine = get_spark_wine_price_band(year, Value_Volume)
+    df_still_wine = get_still_wine_price_band(year, Value_Volume)
     df = pd.concat([df_still_wine, df_wine, df_rtds, df_beer, df_spirits], axis=1)
     df = df.fillna(0)
 
-    output_path = f'out\price_band_Nikki{year}.csv'
-    df.to_csv(output_path)
+    # output_path = f'out\price_band_Nikki{year}.csv'
+    # df.to_csv(output_path)
     return df
+def test_beer(year):
+    """Function to read in and preprocess the Data Orbis file and split the data's sub categories
+            into price bands for RTDs
+
+            : param year: year of data analysis
+            : return: data frame of price band splits per sub category
+            """
+    df = get_product_category(year, 'Rtds')
+    df = convert_product_description_beer_and_rtds(df)
+
+    return df
+#%%
+
 
 #%%
-df = final_outut_to_csv('2020')
-#%%
-dff = df.T
-#%%
-#dff = get_IWSR_data_estimates('2020')
-df_spirits = get_spirits_price_band('2020')
-df_beer = get_beer_price_band('2020')
-df_rtds = get_Rtds_price_band('2020')
-df_wine = get_wine_price_band('2020')
-df_still_wine = get_still_wine_price_band('2020')
-#%%
-df_estimates = get_IWSR_data_estimates('2020')
-#%%
-dff = df_still_wine.T
-#%%
-still_wine_alcohol_df = df_estimates.loc['Still Wine']['Alcohol_volume'] * df_still_wine['Still_Wine_Alcohol']
-still_wine_alcohol_df = still_wine_alcohol_df.rename(columns={0: 'Still_Wine_Alcohol'})
-#%%
-df = category_to_priceband(df_estimates, df_spirits, df_beer, df_rtds, df_wine, df_still_wine)
-df = df.fillna(0)
-#%%
-# df1 = get_spirits_price_band('2020')
-# df2 = get_beer_price_band('2020')
-# df3 = get_wine_price_band('2020')
-
-# df = pd.concat([df1, df2, df3], axis=1)
+df_volume = final_outut_to_csv('2019', 'SALESVOLUME')
+df_value = final_outut_to_csv('2019', 'SALESVALUEINCL')
 
 #%%
-# df_final = category_to_priceband(df, dff)
+df_vol = df_volume.T
+df_val = df_value.T
 #%%
-# df_trans = df_final.T
+df_merge = pd.concat([df_vol, df_val], axis=1)
+output_path = f'out\Volume_Value_2019.csv'
+df_merge.to_csv(output_path)
 
-#counts = df['PRODUCTSUBCATEGORY'].value_counts()
-#%%
-#S=df.groupby(['PRODUCTCATEGORY','PRODUCTSUBCATEGORY']).agg('sum')[['SALESVOLUME']]
-#%%
-#df_prem = df[df['PRODUCTSEGMENT'] == 'Mainstream']['PRODUCTSUBCATEGORY'].value_counts()
-#%%
-#df_prem['PRODUCTCATEGORY'].value_counts()
+
+
