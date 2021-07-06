@@ -74,8 +74,7 @@ def H1_H2_SALBA(year):
 
     return df
 
-
-def H1_H2_Epos(base_df, year, mappings, prop):
+def H1_H2_Epos(year):
     """ Function to read in and convert the EPOS dates to h1 and h2 proportions where
         h1 maps Jan - June and h2 maps July - december data
 
@@ -85,25 +84,82 @@ def H1_H2_Epos(base_df, year, mappings, prop):
     param prop: Either an H1 or H2 proportion
         : return: proportions of H1 and H2 of the various groups (such as Beer, Gin, etc)
         """
-    base_dir = DATA_DIRECTORY / 'H1_H2_Epos' / year / ''
+    # Read in the data
+    base_dir = DATA_DIRECTORY / 'data_orbis_low_level' / 'Data_Orbis_Charl'
     path = get_file_in_directory(base_dir)
+    df = pd.read_excel(path, sheet_name='Sheet1')
 
-    df = pd.read_excel(path, sheet_name='H1')
-    df_H2 = pd.read_excel(path, sheet_name='H2')
-    df = pd.DataFrame(df.groupby(['Category']).agg('sum')[['L']])
-    df = transform_data_epos(df)
-   # df_H1['H1'] = df_H1
-    df = df.rename(columns={'Volume': 'H1'})
-    df_H2 = pd.DataFrame(df_H2.groupby(['Category']).agg('sum')[['L']])
-    df_H2 = transform_data_epos(df_H2)
-    df_H2 = df_H2.rename(columns={'Volume': 'H2'})
-    df['H2'] = df_H2
-    df['Prop H1'] = df['H1'] / (df['H1'] + df['H2'])
-    df['Prop H2'] = df['H2'] / (df['H1'] + df['H2'])
-    df = base_df['index'].apply(map_to_base_data_prop, args=[df, mappings, prop])
+    # seperate the data by subcategory
+    df['PRODUCTSUBCATEGORY'] = df['PRODUCTSUBCATEGORY'].replace(['Cognac'], 'Brandy')
+    df['month'] = df['Realigned YYYYMM'].apply(lambda x: int(str(x)[-1]))
+    df['year'] = df['Realigned YYYYMM'].apply(lambda x: str(x)[:4])
+
+    #filter by year 2020
+    df = df[df['year'] == year]
+
+    aperitif_df = df[df['PRODUCTSUBCATEGORY'] == 'Aperitif']
+    beer_df = df[df['PRODUCTSUBCATEGORY'] == 'Beer']
+    brandy_df = df[df['PRODUCTSUBCATEGORY'] == 'Brandy']
+    cane_df = df[df['PRODUCTSUBCATEGORY'] == 'Cane']
+    cider_df = df[df['PRODUCTSUBCATEGORY'] == 'Cider']
+    fabs_df = df[df['PRODUCTSUBCATEGORY'] == 'Fabs']
+    fortified_df = df[df['PRODUCTSUBCATEGORY'] == 'Fortified']
+    gin_df = df[df['PRODUCTSUBCATEGORY'] == 'Gin']
+    liqueurs_df = df[df['PRODUCTSUBCATEGORY'] == 'Liqueurs']
+    rum_df = df[df['PRODUCTSUBCATEGORY'] == 'Rum']
+    sparkling_df = df[df['PRODUCTSUBCATEGORY'] == 'Sparkling']
+    still_df = df[df['PRODUCTSUBCATEGORY'] == 'Still Wine']
+    tequila_df = df[df['PRODUCTSUBCATEGORY'] == 'Tequila']
+    vodka_df = df[df['PRODUCTSUBCATEGORY'] == 'Vodka']
+    whisky_df = df[df['PRODUCTSUBCATEGORY'] == 'Whisky']
+
+    # get total sales volume by H1 and H2
+    h1_aperitif = aperitif_df[aperitif_df['month'] <= 6]['SALESVOLUME'].sum()
+    h2_aperitif = aperitif_df[aperitif_df['month'] > 6]['SALESVOLUME'].sum()
+    h1_beer = beer_df[beer_df['month'] <= 6]['SALESVOLUME'].sum()
+    h2_beer = beer_df[beer_df['month'] > 6]['SALESVOLUME'].sum()
+    h1_brandy = brandy_df[brandy_df['month'] <= 6]['SALESVOLUME'].sum()
+    h2_brandy = brandy_df[brandy_df['month'] > 6]['SALESVOLUME'].sum()
+    h1_cane = cane_df[cane_df['month'] <= 6]['SALESVOLUME'].sum()
+    h2_cane = cane_df[cane_df['month'] > 6]['SALESVOLUME'].sum()
+    h1_cider = cider_df[cider_df['month'] <= 6]['SALESVOLUME'].sum()
+    h2_cider = cider_df[cider_df['month'] > 6]['SALESVOLUME'].sum()
+    h1_fortified = fortified_df[fortified_df['month'] <= 6]['SALESVOLUME'].sum()
+    h2_fortified = fortified_df[fortified_df['month'] > 6]['SALESVOLUME'].sum()
+    h1_fabs = fabs_df[fabs_df['month'] <= 6]['SALESVOLUME'].sum()
+    h2_fabs = fabs_df[fabs_df['month'] > 6]['SALESVOLUME'].sum()
+    h1_gin = gin_df[gin_df['month'] <= 6]['SALESVOLUME'].sum()
+    h2_gin = gin_df[gin_df['month'] > 6]['SALESVOLUME'].sum()
+    h1_liqueurs = liqueurs_df[liqueurs_df['month'] <= 6]['SALESVOLUME'].sum()
+    h2_liqueurs = liqueurs_df[liqueurs_df['month'] > 6]['SALESVOLUME'].sum()
+    h1_rum = rum_df[rum_df['month'] <= 6]['SALESVOLUME'].sum()
+    h2_rum = rum_df[rum_df['month'] > 6]['SALESVOLUME'].sum()
+
+
+
+
+
+
+
+
+
+
+
     return df
 
-def H1_H2_SAWIS( year):
+#%%
+import pandas as pd
+year = ['2019-01','2019-02','2019-03','2019-04','2019-05','2019-06','2019-07','2020-01', '2020-02']
+df = pd.DataFrame(data=year, columns=['Year'])
+df['month'] = df['Year'].apply(lambda x: int(str(x)[-1]))
+df_h1 = df[df['month'] > 6]['month'].sum()
+
+#int(str(year[2])[-1])
+#str(year[0])[:4]
+
+#%%
+
+def H1_H2_SAWIS(year):
     """ Function to read in and convert the SAWIS dates to h1 and h2 proportions where
             h1 maps Jan - June and h2 maps July - december data
 
@@ -119,56 +175,77 @@ def H1_H2_SAWIS( year):
     sawis_df = pd.read_excel(path, sheet_name='Local', skiprows=2)
     still_wine = sawis_df.T[:5].T[1:].iloc[:13]
     spark_wine = sawis_df.T[5:10].T[1:].iloc[:13]
-    fortified = sawis_df.T[10:].T[1:].iloc[:13]
-    #
-    # still_wine = still_wine.set_index(['Still Wine'])
-    # spark_wine = spark_wine.set_index('Sparkling Wine')
-    # fortified = fortified.set_index('Fortified Wine')
-    #
-    # H1_Still = still_wine.loc['Jan':'Jun'][int(year)].sum()
-    # H2_Still = still_wine.loc['Jul':'Dec'][int(year)].sum()
-    # H1_Spark = spark_wine.loc['Jan':'Jun'][year + ".1"].sum()
-    # H2_Spark = spark_wine.loc['Jul':'Dec'][year + ".1"].sum()
-    # H1_Fort = fortified.loc['Jan':'Jun'][year + ".2"].sum()
-    # H2_Fort = fortified.loc['Jul':'Dec'][year + ".2"].sum()
-    #
-    # #df = None
-    # df = pd.DataFrame(data={
-    #     'H1': [H1_Still, H1_Spark, H1_Fort],
-    #     'H2': [H2_Still, H2_Spark, H2_Fort],
-    #     'Prop H1': [(H1_Still / (H1_Still + H2_Still)),
-    #                 (H1_Spark / (H1_Spark + H2_Spark)),
-    #                 (H1_Fort / (H1_Fort + H2_Fort))],
-    #     'Prop H2': [(H2_Still / (H1_Still + H2_Still)),
-    #                 (H2_Spark / (H1_Spark + H2_Spark)),
-    #                 (H2_Fort / (H1_Fort + H2_Fort))],
-    # }, index=['Still Wine', 'Sparkling Wine', 'Fortified Wine'])
+    fortified_wine = sawis_df.T[10:].T[1:].iloc[:13]
 
-    return spark_wine, fortified
-#%%
-df, df2 = H1_H2_SAWIS('all_years')
-#%%
+    # set the dates as indices
+    still_wine = still_wine.set_index(['Still Wine'])
+    spark_wine = spark_wine.set_index('Sparkling Wine')
+    fortified_wine = fortified_wine.set_index('Fortified Wine')
 
-def base_H1_H2_proportions(df_Salba, df_Sawis, df_Sars):
+    # Add a new column for the averages for 2018 and 2019 only
+    still_wine['Average_Volumes'] = (still_wine[2018] + still_wine[2019]) / 2
+    spark_wine['Average_Volumes'] = (spark_wine['2018.1'] + spark_wine['2019.1']) / 2
+    fortified_wine['Average_Volumes'] = (fortified_wine['2018.2'] + fortified_wine['2019.2']) / 2
+
+
+
+    # Get H1 and H2 volume totals
+    H1_Still = still_wine.loc['Jan':'Jun']['Average_Volumes'].sum()
+    H2_Still = still_wine.loc['Jul':'Dec']['Average_Volumes'].sum()
+    H1_Spark = spark_wine.loc['Jan':'Jun']['Average_Volumes'].sum()
+    H2_Spark = spark_wine.loc['Jul':'Dec']['Average_Volumes'].sum()
+    H1_Fort = fortified_wine.loc['Jan':'Jun']['Average_Volumes'].sum()
+    H2_Fort = fortified_wine.loc['Jul':'Dec']['Average_Volumes'].sum()
+
+    # Get the proportions
+    df = pd.DataFrame(data={
+        'H1': [(H1_Still / (H1_Still + H2_Still)),
+                    (H1_Spark / (H1_Spark + H2_Spark)),
+                    (H1_Fort / (H1_Fort + H2_Fort))],
+        'H2': [(H2_Still / (H1_Still + H2_Still)),
+                    (H2_Spark / (H1_Spark + H2_Spark)),
+                    (H2_Fort / (H1_Fort + H2_Fort))],
+    }, index=['Still Wine', 'Sparkling Wine', 'Fortified Wine'])
+
+    return df
+
+def H1_H2_SARS(year):
+    """ Function to read in and convert the SARS dates to h1 and h2 proportions where
+                h1 maps Jan - June and h2 maps July - december data
+
+        param year: year of data source
+        : return: proportions of H1 and H2 of the various groups (such as Beer, Gin, etc)"""
+
+    base_dir = DATA_DIRECTORY / 'SARS' / year / ''
+    path = get_file_in_directory(base_dir)
+
+    sars_df = pd.read_excel(path, sheet_name='Sheet1', skiprows=1)
+    sars_df = sars_df.iloc[:20,14:]
+    sars_df = sars_df.fillna(0)
+    sars_df["Unnamed: 14"] = sars_df["Unnamed: 14"].apply(lambda x: str(round(x)))
+    sars_df = sars_df.set_index(["Unnamed: 14"])
+
+    # Get beer H1 and H2 for 2019, 2018, 2017 and get the average of their splits
+    sars_df = sars_df.loc['2017':'2019']
+    h1 = (sars_df['H1'].sum()) / 3
+    h2 = (sars_df['H2'].sum()) / 3
+    df = pd.DataFrame(data={
+        'H1': [h1],
+        'H2': [h2],
+
+    }, index=['Beer'])
+
+    return df
+
+def base_H1_H2_proportions(year):
     """..."""
+    df = pd.concat([H1_H2_SARS(year), H1_H2_SAWIS(year), H1_H2_SALBA(year)])
 
+    return df
 
 #%%
-#spark= H1_H2_SAWIS('2020')
+df = base_H1_H2_proportions('all_years')
 #%%
-#Place in main file
-base_df = get_base_df('2020')
-base_df = base_df.reset_index()
-base_df['SALBA prop h1']= H1_H2_SALBA(base_df,'2020', salba_mappings,'Prop H1')
-base_df['SALBA prop h2']= H1_H2_SALBA(base_df,'2020', salba_mappings,'Prop H2')
-base_df['Epos prop h1'] = H1_H2_Epos(base_df,'2020', data_Epos_mappings, 'Prop H1')
-base_df['Epos prop h2'] = H1_H2_Epos(base_df,'2020', data_Epos_mappings, 'Prop H2')
-base_df['SAWIS prop h1'] = H1_H2_SAWIS(base_df,'2020', sawis_mappings, 'Prop H1')
-base_df['SAWIS prop h2'] = H1_H2_SAWIS(base_df,'2020', sawis_mappings, 'Prop H2')
-base_df = base_df.set_index('index')
-#base_df.loc[['Brandy', 'Gin', 'Vodka', 'Liqueurs', 'Whisky', 'Beer', 'Sparkling Wine', 'Wine Aperitif',
-#             'Fortified Wine 1', 'Still Wine', 'Fortified Wine 2', 'CIDER & RTDs', 'Ciders',
-#             'FABs']]
 
 
 
