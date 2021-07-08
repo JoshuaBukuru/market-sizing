@@ -83,7 +83,6 @@ def get_spark_wine_price_band(year, Value_Volume):
 
     return df_mod
 
-
 def get_still_wine_price_band(year, Value_Volume):
     """Function to read in and preprocess the Data Orbis file and split the data's sub categories
         into price bands for wines
@@ -198,6 +197,9 @@ def get_beer_price_band(year, Value_Volume):
     df_mod = df_mod.fillna(0)
 
     return df_mod
+#%%
+df = get_beer_price_band('2020','SALESVOLUME')
+#%%
 
 def get_Rtds_price_band(year, Value_Volume):
     """Function to read in and preprocess the Data Orbis file and split the data's sub categories
