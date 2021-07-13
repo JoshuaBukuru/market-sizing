@@ -1,9 +1,7 @@
 
 import pandas as pd
 import numpy as np
-from utils import *
-from mappings import *
-#from main import *
+from utils.utils import *
 
 def map_to_base_data_prop(group, df, mappings, prop):
     """ In some datasources, certain stats groups are named differently.
@@ -35,11 +33,8 @@ def H1_H2_SALBA(year):
     """ Function to read in and convert the SAlBA dates to h1 and h2 proportions where
     h1 maps Jan - June and h2 maps July - december data
 
-    param file_path: file path of source within the data directory
-    param base_df: external data source
-    param mappings: dictionary that details the mapping of the indexes of the base df
-    param prop: Either an H1 or H2 proportion
-    : return: preprocessed df with SALBA data with stats group as index
+    param year: year of analysis
+    : return: H1 and H2 proportions of SALBA data i.e. (Gin, Vodka, Brandy, etc)
     """
     base_dir = DATA_DIRECTORY / 'SALBA' / year / ''
     path = get_file_in_directory(base_dir)
@@ -106,13 +101,11 @@ def H1_H2_SALBA(year):
 
 def H1_H2_Epos(year):
     """ Function to read in and convert the EPOS dates to h1 and h2 proportions where
-        h1 maps Jan - June and h2 maps July - december data
+        h1 maps Jan - June and h2 maps July - december data. Remember Epos provides all categories.
+        The categories that are not available in SALBA, SAWIS and SARS are taken from these results
 
-    param year: year of data source
-    param base_df: external data source
-    prop mappings: dictionary that details the mapping of the indexes of the base df
-    param prop: Either an H1 or H2 proportion
-        : return: proportions of H1 and H2 of the various groups (such as Beer, Gin, etc)
+    param year: year of analysis
+    : return: H1 and H2 proportions of EPOS data
         """
     # Read in the data
     base_dir = DATA_DIRECTORY / 'data_orbis_low_level' / 'Data_Orbis_Charl'
@@ -222,11 +215,8 @@ def H1_H2_SAWIS(year):
     """ Function to read in and convert the SAWIS dates to h1 and h2 proportions where
             h1 maps Jan - June and h2 maps July - december data
 
-        param year: year of data source
-        param base_df: external data source
-        prop mappings: dictionary that details the mapping of the indexes of the base df
-        param prop: Either an H1 or H2 proportion
-            : return: proportions of H1 and H2 of the various groups (such as Beer, Gin, etc)
+        param year: year of analysis
+    : return: H1 and H2 proportions of SALBA data i.e. (still, fortified and sparkling wine)
             """
     base_dir = DATA_DIRECTORY / 'SAWIS' / year / ''
     path = get_file_in_directory(base_dir)
@@ -296,8 +286,8 @@ def H1_H2_SARS(year):
     """ Function to read in and convert the SARS dates to h1 and h2 proportions where
                 h1 maps Jan - June and h2 maps July - december data
 
-        param year: year of data source
-        : return: proportions of H1 and H2 of the various groups (such as Beer, Gin, etc)"""
+        param year: year of analysis
+        : return: proportions of H1 and H2 of the various groups (such as Beer)"""
 
     base_dir = DATA_DIRECTORY / 'SARS' / year / ''
     path = get_file_in_directory(base_dir)
@@ -331,8 +321,12 @@ def H1_H2_SARS(year):
 
     return df_base, df_2020
 
-def base_H1_H2_proportions(year):
-    """..."""
+def H1_H2_base(year):
+    """ Function to concat all proportions
+
+        param year: year of analysis
+        : return: concatenated dataframes
+    """
     df_base_sars, df_2020_sars = H1_H2_SARS(year)
     df_base_sawis, df_2020_sawis = H1_H2_SAWIS(year)
     df_base_salba, df_2020_salba = H1_H2_SALBA(year)
@@ -371,8 +365,17 @@ def base_H1_H2_proportions(year):
     df_base = pd.concat([df_base, df_addition])
     df_2020 = pd.concat([df_2020, df_addition_2020])
 
+    return df_base, df_2020
+
+def fiscal_year_conversion(year):
+    """ Function to apply proportions to sales volume and convert to Fiscal year
+
+        param year: year of analysis
+        : return: Fiscal year conversions
+    """
+    df_base, df_2020 = H1_H2_base(year)
     # calculate splits
-    df_forecasts = get_forecasts()
+    df_forecasts = get_forecasts_volume()
     length, _ = df_forecasts.shape
     df_mod_2019 = pd.DataFrame(data={'H1': np.zeros(length),
                                 'H2': np.zeros(length)}, index=df_forecasts.index)
@@ -427,14 +430,18 @@ def base_H1_H2_proportions(year):
     df_mod_final['2025'] = df_mod_2024['H2'] + df_mod_2025['H1']
     df_mod_final['2026'] = df_mod_2025['H2'] + df_mod_2026['H1']
 
-    output_path = f'out\Forecast_Fiscal_Year.csv'
+    output_path = f'/Users/jb3p/Documents/Distell projects/Market Sizing/out/Forecast_Fiscal_Year_Adjusted2.csv'
     df_mod_final.to_csv(output_path)
 
     return df_mod_final
 
-def get_forecasts():
-    """..."""
-    base_dir = DATA_DIRECTORY / 'Forecasts'
+def get_forecasts_volume():
+    """ Function to get and preprocess forecasts
+
+        param year: year of analysis
+        : return: processed forecasts
+    """
+    base_dir = DATA_DIRECTORY / 'Forecasts' / 'sales_volume'
     path = get_file_in_directory(base_dir)
 
     df = pd.read_excel(path, sheet_name='Summary')
@@ -447,13 +454,82 @@ def get_forecasts():
 
     return df
 
+def get_forecasts_value():
+    """ Function to get and preprocess forecasts
+
+            param year: year of analysis
+            : return: processed forecasts
+        """
+    base_dir = DATA_DIRECTORY / 'Forecasts' / 'sales_value'
+    path = get_file_in_directory(base_dir)
+
+    df = pd.read_excel(path, sheet_name='Prices')
+
+    return df
+def fiscal_year_conversion_value(year):
+    """ Function to apply proportions to sales value and convert to Fiscal year
+
+        param year: year of analysis
+        : return: Fiscal year conversions
+    """
+    df_base, df_2020 = H1_H2_base(year)
+
+
 
 #%%
-df = base_H1_H2_proportions('all_years')
+df_base, df_2020=H1_H2_base('all_years')
+#%%
+df = get_forecasts_value()
 
 #%%
-
+df_sample = df.iloc[:8]
 #%%
+df_base = pd.DataFrame(data={'H1': [0.4,0.5], 'H2': [0.6,0.5]},index=['Aperitif','Beer'])
+#%%
+#df_sample = df_sample.set_index(['SELECT'])
+#%%
+length, _ = df_sample.shape
+df_mod = pd.DataFrame(data={'H1': np.zeros(length),
+                            'H2': np.zeros(length),
+                            })
+
+for index in df_sample.index:
+    df_mod.iloc[index]['H1'] = df_base.loc[df_sample.iloc[index]['SELECT']]['H1'] * df_sample.iloc[index][2019]
+    df_mod.iloc[index]['H2'] = df_base.loc[df_sample.iloc[index]['SELECT']]['H2'] * df_sample.iloc[index][2019]
+    #df_mod.iloc[index]['Price_band'] = df_sample.iloc[index]['PRICE BAND CORRECT']
+    #df_mod.iloc[index]['index'] = df_sample.iloc[index]['INDEX']
+# df_mod['Price_band'] = df_sample['PRICE BAND CORRECT']
+# df_mod['Index'] = df['INDEX']
+# df_mod['total'] = df_mod['H1'] + df_mod['H2']
+# df_mod['category'] = df_sample['SELECT']
+#%%
+length, _ = df_sample.shape
+df_mod_2020 = pd.DataFrame(data={'H1': np.zeros(length),
+                            'H2': np.zeros(length),
+                            })
+
+for index in df_sample.index:
+    df_mod_2020.iloc[index]['H1'] = df_base.loc[df_sample.iloc[index]['SELECT']]['H1'] * df_sample.iloc[index][2020]
+    df_mod_2020.iloc[index]['H2'] = df_base.loc[df_sample.iloc[index]['SELECT']]['H2'] * df_sample.iloc[index][2020]
+    #df_mod.iloc[index]['Price_band'] = df_sample.iloc[index]['PRICE BAND CORRECT']
+    #df_mod.iloc[index]['index'] = df_sample.iloc[index]['INDEX']
+# df_mod_2020['Price_band'] = df_sample['PRICE BAND CORRECT']
+# df_mod_2020['Index'] = df['INDEX']
+# df_mod_2020['total'] = df_mod_2020['H1'] + df_mod_2020['H2']
+# df_mod_2020['category'] = df_sample['SELECT']
+#%%
+df_mod_final = pd.DataFrame()
+df_mod_final['2020'] = df_mod['H2'] + df_mod_2020['H1']
+
+df_mod_final['Price_band'] = df_sample['PRICE BAND CORRECT']
+df_mod_final['Index'] = df_sample['INDEX']
+df_mod_final['category'] = df_sample['SELECT']
+df_mod_final = df_mod_final.set_index(['category'])
+#%%
+#names
+df = df.replace(['Fortified','Gin','Aperitif','Sparkling', 'Still wine', 'Fabs'],
+                ['Fortified Wine', 'Gin and Genever','Aperitifs','Sparkling Wine', 'Still Wine','FABs'])
+
 
 
 

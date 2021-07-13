@@ -1,15 +1,14 @@
 import pandas as pd
 import numpy as np
-from utils import *
+from utils.utils import *
 from mappings import *
 import re
 def get_product_category(year, sheet):
     """" Function to get the data and filter by product category
 
         : param year: year of data analysis
-        : param product_category: product category
-        : param x: x is the pack size
-        : return: data frame filtered by product category
+        : param sheet: product category sheet
+        : return: data frame processed by product category
         """
     base_dir = DATA_DIRECTORY / 'data_orbis_low_level' / 'Data_Orbis_Socilla'
     path = get_file_in_directory(base_dir)
@@ -50,6 +49,7 @@ def get_spark_wine_price_band(year, Value_Volume):
         into price bands for wines
 
     : param year: year of data analysis
+    : param Value_Volume: Either sales volume or sales value, depending on analysis
     : return: data frame of price band splits per sub category
     """
     # get wine dataframe
@@ -88,6 +88,7 @@ def get_still_wine_price_band(year, Value_Volume):
         into price bands for wines
 
     : param year: year of data analysis
+    : param Value_Volume: Either sales volume or sales value, depending on analysis
     : return: data frame of price band splits per sub category
     """
     # get wine dataframe
@@ -145,7 +146,7 @@ def alcohol_type_classifier(name, category, df_mod):
     : param name: name of subcategory
     : param category: subcategory data
     : param df_mod: modified dataframe with classifiers
-    : return: data frame of price band splits per sub category
+    : return: data frame of category split by alcohol index i.e. Low alcohol, no alcohol alcohol, etc.
     """
     if 'Alcohol' in category:
         df_mod[name + '_Alcohol'] = category.Alcohol.T
@@ -167,7 +168,8 @@ def get_beer_price_band(year, Value_Volume):
     """" Function to read in and preprocess the Data Orbis file and split the data's sub categories
         into price bands for beers
 
-        param year: year of data analysis
+        : param year: year of data analysis
+        : param Value_Volume: Either sales volume or sales value, depending on analysis
         : return: data frame of price band splits per sub category
         """
     # get Beer dataframe
@@ -197,15 +199,13 @@ def get_beer_price_band(year, Value_Volume):
     df_mod = df_mod.fillna(0)
 
     return df_mod
-#%%
-df = get_beer_price_band('2020','SALESVOLUME')
-#%%
 
 def get_Rtds_price_band(year, Value_Volume):
     """Function to read in and preprocess the Data Orbis file and split the data's sub categories
         into price bands for RTDs
 
         : param year: year of data analysis
+        : param Value_Volume: Either sales volume or sales value, depending on analysis
         : return: data frame of price band splits per sub category
         """
     # get RTDs dataframe
@@ -286,6 +286,7 @@ def get_spirits_price_band(year, Value_Volume):
         into price bands for wines
 
     : param year: year of data analysis
+    : param Value_Volume: Either sales volume or sales value, depending on analysis
     : return: data frame of price band splits per sub category
     """
     # get Spirits dataframe
@@ -666,8 +667,13 @@ def category_to_priceband(category_df, priceband_spirits, priceband_beer, priceb
 
     return df
 
-def final_output_to_csv(year, Value_Volume):
-    """..."""
+def price_band_conversions(year, Value_Volume):
+    """Function to concatenate all categories split by price bands
+
+    : param year: year of analysis
+    : param Value_Volume: Either sales volume or sales value, depending on analysis
+    : return dataframe of concatenated categories
+    """
     df_spirits = get_spirits_price_band(year, Value_Volume)
     df_beer = get_beer_price_band(year, Value_Volume)
     df_rtds = get_Rtds_price_band(year, Value_Volume)
@@ -680,34 +686,17 @@ def final_output_to_csv(year, Value_Volume):
     df.to_csv(output_path)
     return df
 
-def test_beer(year):
-    """Function to read in and preprocess the Data Orbis file and split the data's sub categories
-            into price bands for RTDs
 
-            : param year: year of data analysis
-            : return: data frame of price band splits per sub category
-            """
-    df = get_product_category(year, 'Beer')
-    df = convert_product_description_beer_and_rtds(df)
-
-    return df
-#%%
-df = final_output_to_csv('2020', 'SALESVOLUME')
-#%%
-output_path = f'out\VPropTest.csv'
-df.to_csv(output_path)
-
-#%%
-df_volume = final_output_to_csv('2019', 'SALESVOLUME')
-df_value = final_output_to_csv('2019', 'SALESVALUE')
-
-#%%
-df_vol = df_volume.T
-df_val = df_value.T
-#%%
-df_merge = pd.concat([df_vol, df_val], axis=1)
-output_path = f'out\VolumesandValues_2019.csv'
-df_merge.to_csv(output_path)
+# volumes output
+# df_volume = final_output_to_csv('2019', 'SALESVOLUME')
+# df_value = final_output_to_csv('2019', 'SALESVALUE')
+#
+# df_vol = df_volume.T
+# df_val = df_value.T
+#
+# df_merge = pd.concat([df_vol, df_val], axis=1)
+# output_path = f'../out/VolumesandValues_2019.csv'
+# df_merge.to_csv(output_path)
 
 
 

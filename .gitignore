@@ -5,8 +5,8 @@ out/
 outputs/
 docs/
 #files
-market_sizing.ipynb
-Market sizing.docx
+notebooks/market_sizing.ipynb
+docs/Market sizing.docx
 .ipynb_checkpoints
 
 

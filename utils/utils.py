@@ -6,7 +6,7 @@ from pathlib import Path
 full_path = Path().resolve()
 DATA_DIRECTORY = full_path.parent / 'Market Sizing' / 'data'
 #DATA_DIRECTORY
-#%%
+
 def get_file_in_directory(base_dir):
     """ Method to get name of file in base_dir, regardless of naming convention. 
     If multiple files exist in the directory, then function raises a warning and returns the first
@@ -439,7 +439,7 @@ def transform_SALBA_df(df):
 
 
 #tranformed_SALBA = transform_SALBA_df(SALBA_data)
-#%%
+
 def transform_BIP_data(df):
     """ Transform base dataframe to create aggregate stats groups
     param df: base df containing income statement data
