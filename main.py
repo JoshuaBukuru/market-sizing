@@ -114,7 +114,6 @@ def get_data_orbis_estimate(base_df, data_orbis_mappings, iwsr_mappings, current
 
 def result(current_year='2020', last_year='2019'):
     """Function to produce the estimates
-
         param current_year: current year of analysis
         param last_year: year before current year
         : return IWSR estimates for current year
@@ -164,45 +163,45 @@ def result(current_year='2020', last_year='2019'):
                   'FABs']].to_csv(output_path)
     return df
 
-def test_IWSR_estimates(current_year='2020', last_year='2019'):
-    """Function to compare current year IWSR estimates to actual IWSR data for current year
-
-        param current_year: current year of analysis
-        param last_year: year before current year
-        : return : difference between the two as errors
-    """
-    IWSR_df = get_IWSR_data_estimates(current_year)
-    result_df = result(current_year, last_year)
-    # fortified_aperitif_s = result_df.loc['Fortified Wine 1'] + result_df.loc['Fortified Wine 2']\
-    #                        + result_df.loc['Wine Aperitif']
-    # fortified_aperitif_s = (pd.DataFrame(data=fortified_aperitif_s, columns=['Fortified Wine & Wine Aperitifs'])).T
-    # result_df = pd.concat([result_df, fortified_aperitif_s])
-
-    brandy_df = abs((result_df.loc['Brandy']['Avg Estimate'] / IWSR_df.loc['Brandy']['Sales Volume']) - 1)
-    gin_df = abs((result_df.loc['Gin']['Avg Estimate'] / IWSR_df.loc['Gin and Genever']['Sales Volume']) - 1)
-    #cane_df = abs((result_df.loc['Brandy']['Avg Estimate'] / IWSR_df.loc['Brandy']['Sales Volume']) - 1)
-    vodka_df = abs((result_df.loc['Vodka']['Avg Estimate'] / IWSR_df.loc['Vodka']['Sales Volume']) - 1)
-    liqueurs_df = abs((result_df.loc['Liqueurs']['Avg Estimate'] / IWSR_df.loc['Liqueurs']['Sales Volume']) - 1)
-    whisky_df = abs((result_df.loc['Whisky']['Avg Estimate'] / IWSR_df.loc['Whisky']['Sales Volume']) - 1)
-    #rum_df = abs((result_df.loc['Rum']['Avg Estimate'] / IWSR_df.loc['Rum']['Sales Volume']) - 1)
-    #tequila_df = abs((result_df.loc['Brandy']['Avg Estimate'] / IWSR_df.loc['Brandy']['Sales Volume']) - 1)
-    spark_df = abs((result_df.loc['Sparkling Wine']['Avg Estimate'] / IWSR_df.loc['Sparkling Wine']['Sales Volume']) - 1)
-    still_df = abs((result_df.loc['Still Wine']['Avg Estimate'] / IWSR_df.loc['Still Wine']['Sales Volume']) - 1)
-    fort_df = abs((result_df.loc['Fortified Wine 2']['Avg Estimate'] / IWSR_df.loc['Fortified Wine & Wine Aperitifs']['Sales Volume']) - 1)
-    cider_fabs_df = abs((result_df.loc['CIDER & RTDs']['Avg Estimate'] / IWSR_df.loc['Cider & FABs']['Sales Volume']) - 1)
-    beer_df = abs((result_df.loc['Beer']['Avg Estimate'] / IWSR_df.loc['Beer']['Sales Volume']) - 1)
-
-    df = pd.DataFrame(data=[brandy_df, gin_df, vodka_df, liqueurs_df, whisky_df,
-                            spark_df, still_df, fort_df, cider_fabs_df, beer_df], columns=['Error of Estimates'],
-                      index=['Brandy', 'Gin', 'Vodka', 'Liqueurs', 'Whisky', 'Sparkling Wine', 'Still Wine',
-                             'Fortified Wine & Wine Aperitifs', 'Cider & FABs', 'Beer'])
-
-    return df
+# def test_IWSR_estimates(current_year='2020', last_year='2019'):
+#     """Function to compare current year IWSR estimates to actual IWSR data for current year
+#
+#         param current_year: current year of analysis
+#         param last_year: year before current year
+#         : return : difference between the two as errors
+#     """
+#     IWSR_df = get_IWSR_data_estimates(current_year)
+#     result_df = result(current_year, last_year)
+#     # fortified_aperitif_s = result_df.loc['Fortified Wine 1'] + result_df.loc['Fortified Wine 2']\
+#     #                        + result_df.loc['Wine Aperitif']
+#     # fortified_aperitif_s = (pd.DataFrame(data=fortified_aperitif_s, columns=['Fortified Wine & Wine Aperitifs'])).T
+#     # result_df = pd.concat([result_df, fortified_aperitif_s])
+#
+#     brandy_df = abs((result_df.loc['Brandy']['Avg Estimate'] / IWSR_df.loc['Brandy']['Sales Volume']) - 1)
+#     gin_df = abs((result_df.loc['Gin']['Avg Estimate'] / IWSR_df.loc['Gin and Genever']['Sales Volume']) - 1)
+#     #cane_df = abs((result_df.loc['Brandy']['Avg Estimate'] / IWSR_df.loc['Brandy']['Sales Volume']) - 1)
+#     vodka_df = abs((result_df.loc['Vodka']['Avg Estimate'] / IWSR_df.loc['Vodka']['Sales Volume']) - 1)
+#     liqueurs_df = abs((result_df.loc['Liqueurs']['Avg Estimate'] / IWSR_df.loc['Liqueurs']['Sales Volume']) - 1)
+#     whisky_df = abs((result_df.loc['Whisky']['Avg Estimate'] / IWSR_df.loc['Whisky']['Sales Volume']) - 1)
+#     #rum_df = abs((result_df.loc['Rum']['Avg Estimate'] / IWSR_df.loc['Rum']['Sales Volume']) - 1)
+#     #tequila_df = abs((result_df.loc['Brandy']['Avg Estimate'] / IWSR_df.loc['Brandy']['Sales Volume']) - 1)
+#     spark_df = abs((result_df.loc['Sparkling Wine']['Avg Estimate'] / IWSR_df.loc['Sparkling Wine']['Sales Volume']) - 1)
+#     still_df = abs((result_df.loc['Still Wine']['Avg Estimate'] / IWSR_df.loc['Still Wine']['Sales Volume']) - 1)
+#     fort_df = abs((result_df.loc['Fortified Wine 2']['Avg Estimate'] / IWSR_df.loc['Fortified Wine & Wine Aperitifs']['Sales Volume']) - 1)
+#     cider_fabs_df = abs((result_df.loc['CIDER & RTDs']['Avg Estimate'] / IWSR_df.loc['Cider & FABs']['Sales Volume']) - 1)
+#     beer_df = abs((result_df.loc['Beer']['Avg Estimate'] / IWSR_df.loc['Beer']['Sales Volume']) - 1)
+#
+#     df = pd.DataFrame(data=[brandy_df, gin_df, vodka_df, liqueurs_df, whisky_df,
+#                             spark_df, still_df, fort_df, cider_fabs_df, beer_df], columns=['Error of Estimates'],
+#                       index=['Brandy', 'Gin', 'Vodka', 'Liqueurs', 'Whisky', 'Sparkling Wine', 'Still Wine',
+#                              'Fortified Wine & Wine Aperitifs', 'Cider & FABs', 'Beer'])
+#
+#     return df
 
 if __name__ == '__main__':
 
     # get estimates
-    result()
+    result(current_year='2020', last_year='2019')
 
     # get price bands
     price_band_conversions('2020', 'SALESVOLUME')

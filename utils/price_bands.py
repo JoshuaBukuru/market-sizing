@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from utils.utils import *
-from mappings import *
+#from mappings import *
 import re
 def get_product_category(year, sheet):
     """" Function to get the data and filter by product category

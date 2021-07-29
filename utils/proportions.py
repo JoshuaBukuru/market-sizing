@@ -1,4 +1,5 @@
-
+import os
+import pathlib
 import pandas as pd
 import numpy as np
 from utils.utils import *
@@ -366,7 +367,94 @@ def H1_H2_base(year):
     df_2020 = pd.concat([df_2020, df_addition_2020])
 
     return df_base, df_2020
+def fiscal_year_cagr(year):
+    """..."""
+    # Get the CAGR data (from 2011 to 2020)
+    base_dir = DATA_DIRECTORY / 'CAGR' /''
+    path = get_file_in_directory(base_dir)
+    df = pd.read_excel(path, sheet_name='CY_2019base', skiprows=6)
+    df = df.iloc[:,:12]
+    df = df.dropna()
+    df = df.set_index(['CATEGORY'])
+    df = df.drop(index='Other Wines')
 
+    # Get the base and 2020 proportions
+    df_base, df_2020 = H1_H2_base(year) # TODO check naming convention with retrieved file
+
+    # calculate splits
+    length, _ = df.shape
+    df_mod_2011 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2012 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2013 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2014 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2015 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2016 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2017 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2018 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2019 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2020 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    #
+    for index in df.index:
+        df_mod_2011.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2011]
+        df_mod_2011.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2011]
+    for index in df.index:
+        df_mod_2012.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2012]
+        df_mod_2012.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2012]
+    for index in df.index:
+        df_mod_2013.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2013]
+        df_mod_2013.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2013]
+    for index in df.index:
+        df_mod_2014.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2014]
+        df_mod_2014.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2014]
+    for index in df.index:
+        df_mod_2015.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2015]
+        df_mod_2015.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2015]
+    for index in df.index:
+        df_mod_2016.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2016]
+        df_mod_2016.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2016]
+    for index in df.index:
+        df_mod_2017.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2017]
+        df_mod_2017.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2017]
+    for index in df.index:
+        df_mod_2018.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2018]
+        df_mod_2018.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2018]
+    for index in df.index:
+        df_mod_2019.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2019]
+        df_mod_2019.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2019]
+    for index in df.index:
+        df_mod_2020.loc[index]['H1'] = df_2020.loc[index]['H1'] * df.loc[index][2020]
+        df_mod_2020.loc[index]['H2'] = df_2020.loc[index]['H2'] * df.loc[index][2020]
+
+    # Fiscal year conversions
+    df_mod_final = pd.DataFrame()
+    df_mod_final['2012'] = df_mod_2011['H2'] + df_mod_2012['H1']
+    df_mod_final['2013'] = df_mod_2012['H2'] + df_mod_2013['H1']
+    df_mod_final['2014'] = df_mod_2013['H2'] + df_mod_2014['H1']
+    df_mod_final['2015'] = df_mod_2014['H2'] + df_mod_2015['H1']
+    df_mod_final['2016'] = df_mod_2015['H2'] + df_mod_2016['H1']
+    df_mod_final['2017'] = df_mod_2016['H2'] + df_mod_2017['H1']
+    df_mod_final['2018'] = df_mod_2017['H2'] + df_mod_2018['H1']
+    df_mod_final['2019'] = df_mod_2018['H2'] + df_mod_2019['H1']
+    df_mod_final['2020'] = df_mod_2019['H2'] + df_mod_2020['H1']
+
+    output_path = f'out\Fiscal_year_CAGR.csv'
+    df_mod_final.to_csv(output_path)
+
+    return df_mod_final
+
+#%%
+df_mod_2011, df_mod_2015, df_2020, df_base, df_2020 = fiscal_year_cagr('all_years')
+#%%
 def fiscal_year_conversion(year):
     """ Function to apply proportions to sales volume and convert to Fiscal year
 
@@ -430,7 +518,7 @@ def fiscal_year_conversion(year):
     df_mod_final['2025'] = df_mod_2024['H2'] + df_mod_2025['H1']
     df_mod_final['2026'] = df_mod_2025['H2'] + df_mod_2026['H1']
 
-    output_path = f'/Users/jb3p/Documents/Distell projects/Market Sizing/out/Forecast_Fiscal_Year_Adjusted2.csv'
+    output_path = f'out\Forecast_Fiscal_Year.csv'
     df_mod_final.to_csv(output_path)
 
     return df_mod_final
@@ -474,61 +562,87 @@ def fiscal_year_conversion_value(year):
     """
     df_base, df_2020 = H1_H2_base(year)
 
+    df_forecast = get_forecasts_value()
+    df_forecast = df_forecast.replace(['Fortified', 'Gin', 'Aperitif', 'Sparkling', 'Fabs'],
+                                  ['Fortified Wine', 'Gin and Genever', 'Aperitifs', 'Sparkling Wine', 'FABs'])
+
+    length, _ = df_forecast.shape
+    df_mod_2019 = pd.DataFrame(data={'H1': np.zeros(length),
+                                'H2': np.zeros(length),
+                                })
+    df_mod_2020 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length),
+                                     })
+    df_mod_2021 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length),
+                                     })
+    df_mod_2022 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length),
+                                     })
+    df_mod_2023 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length),
+                                     })
+    df_mod_2024 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length),
+                                     })
+    df_mod_2025 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length),
+                                     })
+    df_mod_2026 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length),
+                                     })
+
+    for index in df_forecast.index:
+        df_mod_2019.iloc[index]['H1'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H1'] * df_forecast.iloc[index][2019]
+        df_mod_2019.iloc[index]['H2'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H2'] * df_forecast.iloc[index][2019]
+
+    for index in df_forecast.index:
+        df_mod_2020.iloc[index]['H1'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H1'] * df_forecast.iloc[index][2020]
+        df_mod_2020.iloc[index]['H2'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H2'] * df_forecast.iloc[index][2020]
+
+    for index in df_forecast.index:
+        df_mod_2021.iloc[index]['H1'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H1'] * df_forecast.iloc[index][2021]
+        df_mod_2021.iloc[index]['H2'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H2'] * df_forecast.iloc[index][2021]
+
+    for index in df_forecast.index:
+        df_mod_2022.iloc[index]['H1'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H1'] * df_forecast.iloc[index][2022]
+        df_mod_2022.iloc[index]['H2'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H2'] * df_forecast.iloc[index][2022]
+
+    for index in df_forecast.index:
+        df_mod_2023.iloc[index]['H1'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H1'] * df_forecast.iloc[index][2023]
+        df_mod_2023.iloc[index]['H2'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H2'] * df_forecast.iloc[index][2023]
+
+    for index in df_forecast.index:
+        df_mod_2024.iloc[index]['H1'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H1'] * df_forecast.iloc[index][2024]
+        df_mod_2024.iloc[index]['H2'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H2'] * df_forecast.iloc[index][2024]
+
+    for index in df_forecast.index:
+        df_mod_2025.iloc[index]['H1'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H1'] * df_forecast.iloc[index][2025]
+        df_mod_2025.iloc[index]['H2'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H2'] * df_forecast.iloc[index][2025]
+
+    for index in df_forecast.index:
+        df_mod_2026.iloc[index]['H1'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H1'] * df_forecast.iloc[index][2026]
+        df_mod_2026.iloc[index]['H2'] = df_base.loc[df_forecast.iloc[index]['SELECT']]['H2'] * df_forecast.iloc[index][2026]
+
+    df_mod_final = pd.DataFrame()
+    df_mod_final['Price_band'] = df_forecast['PRICE BAND CORRECT']
+    df_mod_final['Index'] = df_forecast['INDEX']
+    df_mod_final['category'] = df_forecast['SELECT']
+
+    df_mod_final['2020'] = df_mod_2019['H2'] + df_mod_2020['H1']
+    df_mod_final['2021'] = df_mod_2020['H2'] + df_mod_2021['H1']
+    df_mod_final['2022'] = df_mod_2021['H2'] + df_mod_2022['H1']
+    df_mod_final['2023'] = df_mod_2022['H2'] + df_mod_2023['H1']
+    df_mod_final['2024'] = df_mod_2023['H2'] + df_mod_2024['H1']
+    df_mod_final['2025'] = df_mod_2024['H2'] + df_mod_2025['H1']
+    df_mod_final['2026'] = df_mod_2025['H2'] + df_mod_2026['H1']
+
+    df_mod_final = df_mod_final.set_index(['category'])
+
+    return df_mod_final
 
 
-#%%
-df_base, df_2020=H1_H2_base('all_years')
-#%%
-df = get_forecasts_value()
 
-#%%
-df_sample = df.iloc[:8]
-#%%
-df_base = pd.DataFrame(data={'H1': [0.4,0.5], 'H2': [0.6,0.5]},index=['Aperitif','Beer'])
-#%%
-#df_sample = df_sample.set_index(['SELECT'])
-#%%
-length, _ = df_sample.shape
-df_mod = pd.DataFrame(data={'H1': np.zeros(length),
-                            'H2': np.zeros(length),
-                            })
-
-for index in df_sample.index:
-    df_mod.iloc[index]['H1'] = df_base.loc[df_sample.iloc[index]['SELECT']]['H1'] * df_sample.iloc[index][2019]
-    df_mod.iloc[index]['H2'] = df_base.loc[df_sample.iloc[index]['SELECT']]['H2'] * df_sample.iloc[index][2019]
-    #df_mod.iloc[index]['Price_band'] = df_sample.iloc[index]['PRICE BAND CORRECT']
-    #df_mod.iloc[index]['index'] = df_sample.iloc[index]['INDEX']
-# df_mod['Price_band'] = df_sample['PRICE BAND CORRECT']
-# df_mod['Index'] = df['INDEX']
-# df_mod['total'] = df_mod['H1'] + df_mod['H2']
-# df_mod['category'] = df_sample['SELECT']
-#%%
-length, _ = df_sample.shape
-df_mod_2020 = pd.DataFrame(data={'H1': np.zeros(length),
-                            'H2': np.zeros(length),
-                            })
-
-for index in df_sample.index:
-    df_mod_2020.iloc[index]['H1'] = df_base.loc[df_sample.iloc[index]['SELECT']]['H1'] * df_sample.iloc[index][2020]
-    df_mod_2020.iloc[index]['H2'] = df_base.loc[df_sample.iloc[index]['SELECT']]['H2'] * df_sample.iloc[index][2020]
-    #df_mod.iloc[index]['Price_band'] = df_sample.iloc[index]['PRICE BAND CORRECT']
-    #df_mod.iloc[index]['index'] = df_sample.iloc[index]['INDEX']
-# df_mod_2020['Price_band'] = df_sample['PRICE BAND CORRECT']
-# df_mod_2020['Index'] = df['INDEX']
-# df_mod_2020['total'] = df_mod_2020['H1'] + df_mod_2020['H2']
-# df_mod_2020['category'] = df_sample['SELECT']
-#%%
-df_mod_final = pd.DataFrame()
-df_mod_final['2020'] = df_mod['H2'] + df_mod_2020['H1']
-
-df_mod_final['Price_band'] = df_sample['PRICE BAND CORRECT']
-df_mod_final['Index'] = df_sample['INDEX']
-df_mod_final['category'] = df_sample['SELECT']
-df_mod_final = df_mod_final.set_index(['category'])
-#%%
-#names
-df = df.replace(['Fortified','Gin','Aperitif','Sparkling', 'Still wine', 'Fabs'],
-                ['Fortified Wine', 'Gin and Genever','Aperitifs','Sparkling Wine', 'Still Wine','FABs'])
 
 
 
