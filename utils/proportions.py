@@ -372,11 +372,12 @@ def fiscal_year_cagr(year):
     # Get the CAGR data (from 2011 to 2020)
     base_dir = DATA_DIRECTORY / 'CAGR' /''
     path = get_file_in_directory(base_dir)
-    df = pd.read_excel(path, sheet_name='CY_2019base', skiprows=6)
-    df = df.iloc[:,:12]
+    df = pd.read_excel(path, sheet_name='Summary2', skiprows=2)
+    #df = df.iloc[:,:12]
     df = df.dropna()
     df = df.set_index(['CATEGORY'])
     df = df.drop(index='Other Wines')
+    df = df[df['INSTITUTION'] == 'DISTELL']
 
     # Get the base and 2020 proportions
     df_base, df_2020 = H1_H2_base(year) # TODO check naming convention with retrieved file
@@ -402,6 +403,18 @@ def fiscal_year_cagr(year):
     df_mod_2019 = pd.DataFrame(data={'H1': np.zeros(length),
                                      'H2': np.zeros(length)}, index=df.index)
     df_mod_2020 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2021 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2022 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2023 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2024 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2025 = pd.DataFrame(data={'H1': np.zeros(length),
+                                     'H2': np.zeros(length)}, index=df.index)
+    df_mod_2026 = pd.DataFrame(data={'H1': np.zeros(length),
                                      'H2': np.zeros(length)}, index=df.index)
     #
     for index in df.index:
@@ -434,7 +447,24 @@ def fiscal_year_cagr(year):
     for index in df.index:
         df_mod_2020.loc[index]['H1'] = df_2020.loc[index]['H1'] * df.loc[index][2020]
         df_mod_2020.loc[index]['H2'] = df_2020.loc[index]['H2'] * df.loc[index][2020]
-
+    for index in df.index:
+        df_mod_2021.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2021]
+        df_mod_2021.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2021]
+    for index in df.index:
+        df_mod_2022.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2022]
+        df_mod_2022.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2022]
+    for index in df.index:
+        df_mod_2023.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2023]
+        df_mod_2023.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2023]
+    for index in df.index:
+        df_mod_2024.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2024]
+        df_mod_2024.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2024]
+    for index in df.index:
+        df_mod_2025.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2025]
+        df_mod_2025.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2025]
+    for index in df.index:
+        df_mod_2026.loc[index]['H1'] = df_base.loc[index]['H1'] * df.loc[index][2026]
+        df_mod_2026.loc[index]['H2'] = df_base.loc[index]['H2'] * df.loc[index][2026]
     # Fiscal year conversions
     df_mod_final = pd.DataFrame()
     df_mod_final['2012'] = df_mod_2011['H2'] + df_mod_2012['H1']
@@ -446,15 +476,17 @@ def fiscal_year_cagr(year):
     df_mod_final['2018'] = df_mod_2017['H2'] + df_mod_2018['H1']
     df_mod_final['2019'] = df_mod_2018['H2'] + df_mod_2019['H1']
     df_mod_final['2020'] = df_mod_2019['H2'] + df_mod_2020['H1']
+    df_mod_final['2021'] = df_mod_2020['H2'] + df_mod_2021['H1']
+    df_mod_final['2022'] = df_mod_2021['H2'] + df_mod_2022['H1']
+    df_mod_final['2023'] = df_mod_2022['H2'] + df_mod_2023['H1']
+    df_mod_final['2024'] = df_mod_2023['H2'] + df_mod_2024['H1']
+    df_mod_final['2025'] = df_mod_2024['H2'] + df_mod_2025['H1']
+    df_mod_final['2026'] = df_mod_2025['H2'] + df_mod_2026['H1']
 
-    output_path = f'out\Fiscal_year_CAGR.csv'
+    output_path = f'out\Fiscal_year_new.csv'
     df_mod_final.to_csv(output_path)
-
     return df_mod_final
 
-#%%
-df_mod_2011, df_mod_2015, df_2020, df_base, df_2020 = fiscal_year_cagr('all_years')
-#%%
 def fiscal_year_conversion(year):
     """ Function to apply proportions to sales volume and convert to Fiscal year
 
@@ -550,10 +582,11 @@ def get_forecasts_value():
         """
     base_dir = DATA_DIRECTORY / 'Forecasts' / 'sales_value'
     path = get_file_in_directory(base_dir)
-
-    df = pd.read_excel(path, sheet_name='Prices')
+    df = pd.read_excel(path, sheet_name='Prices', skiprows=2)
+    df = df.iloc[:,:11]
 
     return df
+
 def fiscal_year_conversion_value(year):
     """ Function to apply proportions to sales value and convert to Fiscal year
 
@@ -563,8 +596,8 @@ def fiscal_year_conversion_value(year):
     df_base, df_2020 = H1_H2_base(year)
 
     df_forecast = get_forecasts_value()
-    df_forecast = df_forecast.replace(['Fortified', 'Gin', 'Aperitif', 'Sparkling', 'Fabs'],
-                                  ['Fortified Wine', 'Gin and Genever', 'Aperitifs', 'Sparkling Wine', 'FABs'])
+    # df_forecast = df_forecast.replace(['Fortified', 'Gin', 'Aperitif', 'Sparkling', 'Fabs'],
+    #                               ['Fortified Wine', 'Gin and Genever', 'Aperitifs', 'Sparkling Wine', 'FABs'])
 
     length, _ = df_forecast.shape
     df_mod_2019 = pd.DataFrame(data={'H1': np.zeros(length),
@@ -641,7 +674,12 @@ def fiscal_year_conversion_value(year):
 
     return df_mod_final
 
+#%%
+df = fiscal_year_conversion_value('all_years')
 
+#%%
+output_path = f'out\Fiscal_year_value_new.csv'
+df.to_csv(output_path)
 
 
 
